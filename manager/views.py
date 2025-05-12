@@ -192,7 +192,7 @@ class PrescriptionDetailView(LoginRequiredMixin, HospitalmanagerRequiredMixin, D
     context_object_name = "prescription"
 
     def get_queryset(self):
-        # restrict to your hospital’s patients
+        # restrict to your hospital's patients
         return Prescription.objects.filter(patient__hospital=self.request.user.hospital)
 
     def get_context_data(self, **kwargs):
@@ -326,7 +326,7 @@ class AdmissionCreateView(LoginRequiredMixin,
         """
         Admit the patient **only if** the chosen bed is still free.
         The bed row is locked until the transaction ends, so two
-        concurrent requests can’t grab the same bed.
+        concurrent requests can't grab the same bed.
         """
         with transaction.atomic():
             admission = form.save(commit=False)
@@ -527,7 +527,7 @@ def admission_print(request, admission_id):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    pdfmetrics.registerFont(TTFont('Arabic', '/HMS/Janna LT Bold.ttf'))
+    pdfmetrics.registerFont(TTFont('Arabic', os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')))
 
     def prepare_arabic_text(text):
         reshaped_text = arabic_reshaper.reshape(text)
@@ -1032,7 +1032,7 @@ def medical_record_print(request):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    pdfmetrics.registerFont(TTFont('Arabic', '/HMS/Janna LT Bold.ttf'))
+    pdfmetrics.registerFont(TTFont('Arabic', os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')))
 
     def prepare_arabic_text(text):
         if not text:
@@ -1582,7 +1582,7 @@ class ObservationFormCreateView(LoginRequiredMixin, HospitalmanagerRequiredMixin
         return super().form_valid(form)
 
     def get_success_url(self):
-        # send you right back to that patient’s detail page
+        # send you right back to that patient's detail page
         return reverse_lazy("manager:patient_detail", kwargs={"pk": self.patient.pk})
 
 # Procedure Views
@@ -1952,7 +1952,7 @@ def download_wristband(request, patient_id):
     
 def download_qr_code(request, patient_id):
     """
-    Return a PNG image with a QR‑code that encodes the patient’s MRN
+    Return a PNG image with a QR‑code that encodes the patient's MRN
     and full name. Used by the /<patient_id>/qrcode/ route.
     """
     if not (request.user.is_authenticated and request.user.role == "hospital_manager"):

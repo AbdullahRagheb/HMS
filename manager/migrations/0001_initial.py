@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='Patient',
             constraint=models.CheckConstraint(
-                condition=models.Q(('passport__isnull', False), ('id_card__isnull', False), _connector='OR'),
+                check=models.Q(('passport__isnull', False), ('id_card__isnull', False), _connector='OR'),
                 name='at_least_one_id_document'
             ),
         ),
