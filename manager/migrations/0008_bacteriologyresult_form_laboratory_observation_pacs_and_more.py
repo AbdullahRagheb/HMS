@@ -287,7 +287,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='patient',
-            constraint=models.CheckConstraint(condition=models.Q(('passport__isnull', False), ('id_card__isnull', False), _connector='OR'), name='patient_identification_document_provided'),
+            constraint=models.CheckConstraint(check=models.Q(('passport__isnull', False), ('id_card__isnull', False), _connector='OR'), name='patient_identification_document_provided'),
         ),
         migrations.AddField(
             model_name='bacteriologyresult',
