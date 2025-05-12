@@ -527,7 +527,7 @@ def admission_print(request, admission_id):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    pdfmetrics.registerFont(TTFont('Arabic', '/Users/adelfathy/Downloads/hospital_system 3/Janna LT Bold.ttf'))
+    pdfmetrics.registerFont(TTFont('Arabic', '/HMS/Janna LT Bold.ttf'))
 
     def prepare_arabic_text(text):
         reshaped_text = arabic_reshaper.reshape(text)
@@ -1032,7 +1032,7 @@ def medical_record_print(request):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    pdfmetrics.registerFont(TTFont('Arabic', '/Users/adelfathy/Downloads/hospital_system 3/Janna LT Bold.ttf'))
+    pdfmetrics.registerFont(TTFont('Arabic', '/HMS/Janna LT Bold.ttf'))
 
     def prepare_arabic_text(text):
         if not text:
