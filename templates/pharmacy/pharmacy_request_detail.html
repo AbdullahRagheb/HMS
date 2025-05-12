@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Request #{{ request_obj.pk }}</h2>
+<p><strong>Patient:</strong> {{ request_obj.patient.full_name }}</p>
+<p><strong>Status:</strong> {{ request_obj.get_status_display }}</p>
+<ul>
+  {% for item in request_obj.items.all %}
+    <li>{{ item.medication.name }} — {{ item.dosage }}</li>
+  {% endfor %}
+</ul>
+<img src="{{ request_obj.qr_code.url }}" alt="QR Code">
+{% endblock %}

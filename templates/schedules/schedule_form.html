@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Schedule{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <div class="card shadow-sm p-4 rounded-3">
+        <h2 class="mb-4 text-center fw-bold text-dark">
+            <i class="bi bi-calendar-{% if form.instance.pk %}fill{% else %}plus-fill{% endif %} me-2"></i>
+            {% if form.instance.pk %}Edit{% else %}New{% endif %} Schedule
+        </h2>
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% for error in form.non_field_errors %}
+                    {{ error }}<br>
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+        <form method="post" class="needs-validation" novalidate id="schedule-form">
+            {% csrf_token %}
+            <div class="row g-4">
+                <!-- Main schedule fields -->
+                {% for field in form %}
+                    {% if 'day_' not in field.name and field.name != 'shift_period' %}
+                        <div class="col-md-6">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-medium">
+                                <i class="bi bi-{% if field.name == 'department' %}building{% elif field.name == 'start_date' or field.name == 'end_date' %}calendar{% elif field.name == 'schedule_type' %}tag{% elif field.name == 'per_patient_time' %}clock{% endif %} me-1"></i>
+                                {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-{% if field.name == 'department' %}building{% elif field.name == 'start_date' or field.name == 'end_date' %}calendar{% elif field.name == 'schedule_type' %}tag{% elif field.name == 'per_patient_time' %}clock{% endif %}"></i>
+                                </span>
+                                {{ field }}
+                            </div>
+                            {% if field.errors %}
+                                {% for error in field.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Shift period selector -->
+                <div class="col-md-6">
+                    <label for="id_shift_period" class="form-label fw-medium">
+                        <i class="bi bi-clock me-1"></i>Shift Period <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-clock"></i></span>
+                        {{ form.shift_period }}
+                    </div>
+                    {% if form.shift_period.errors %}
+                        {% for error in form.shift_period.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <small class="form-text text-muted">Select a shift period to define availability (staff assigned via Shift Assignments).</small>
+                </div>
+
+                <!-- Daily availability -->
+                <div class="col-12 mt-5">
+                    <h4 class="mb-4 text-dark fw-bold"><i class="bi bi-clock me-2"></i>Daily Availability</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Day</th>
+                                    <th scope="col">Available From</th>
+                                    <th scope="col">Available To</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for day in form.daily_fields %}
+                                    <tr>
+                                        <td class="fw-medium">{{ day.day_name }}</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="bi bi-clock"></i></span>
+                                                <input type="time" name="{{ day.available_from_field }}"
+                                                       id="id_{{ day.available_from_field }}"
+                                                       class="form-control"
+                                                       value="{% if day.available_from.value %}{{ day.available_from.value|time:'H:i' }}{% endif %}"
+                                                       {% if day.available_from.errors %}is-invalid{% endif %}
+                                                       aria-describedby="{{ day.available_from_field }}-help">
+                                            </div>
+                                            {% if day.available_from.errors %}
+                                                {% for error in day.available_from.errors %}
+                                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="bi bi-clock"></i></span>
+                                                <input type="time" name="{{ day.available_to_field }}"
+                                                       id="id_{{ day.available_to_field }}"
+                                                       class="form-control"
+                                                       value="{% if day.available_to.value %}{{ day.available_to.value|time:'H:i' }}{% endif %}"
+                                                       {% if day.available_to.errors %}is-invalid{% endif %}
+                                                       aria-describedby="{{ day.available_to_field }}-help">
+                                            </div>
+                                            {% if day.available_to.errors %}
+                                                {% for error in day.available_to.errors %}
+                                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">Availability defines when shifts can be assigned for this schedule.</small>
+                </div>
+            </div>
+            <div class="text-center mt-5">
+                <button type="button" class="btn btn-primary px-5" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                    <i class="bi bi-save me-2"></i>Save Schedule
+                </button>
+                <a href="{% url 'hr:schedule_list' %}" class="btn btn-secondary px-5">
+                    <i class="bi bi-x-circle me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="confirmModalLabel"><i class="bi bi-check-circle me-2"></i>Confirm Schedule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to save this schedule? You can assign staff to it via Shift Assignments.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-2"></i>Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('schedule-form').submit()">
+                    <i class="bi bi-save me-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        border-radius: 0.75rem;
+    }
+    .form-label {
+        font-size: 1rem;
+        color: #343a40;
+    }
+    .input-group-text {
+        border-radius: 0.375rem 0 0 0.375rem;
+    }
+    .table th, .table td {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    @media (max-width: 576px) {
+        .btn {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        .table th, .table td {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        'use strict';
+
+        // Shift period handling
+        const shiftPeriodSelect = document.getElementById('id_shift_period');
+        function updateDailyAvailability(shift) {
+            const times = {
+                'morning': { from: '08:00', to: '16:00' },
+                'night': { from: '16:00', to: '00:00' },
+                '': { from: '', to: '' }
+            };
+            const shiftTimes = times[shift] || times[''];
+            [0, 1, 2, 3, 4, 5, 6].forEach(day => {
+                const fromField = document.getElementById(`id_day_${day}_available_from`);
+                const toField = document.getElementById(`id_day_${day}_available_to`);
+                if (fromField && toField) {
+                    fromField.value = shiftTimes.from;
+                    toField.value = shiftTimes.to;
+                }
+            });
+        }
+
+        shiftPeriodSelect.addEventListener('change', function () {
+            updateDailyAvailability(this.value);
+        });
+
+        // Initialize daily availability if shift period is set
+        if (shiftPeriodSelect.value) {
+            updateDailyAvailability(shiftPeriodSelect.value);
+        }
+
+        // Bootstrap form validation
+        const form = document.getElementById('schedule-form');
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+</script>
+{% endblock %}

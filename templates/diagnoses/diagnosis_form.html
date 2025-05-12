@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Add Diagnosis{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2><i class="bi bi-file-medical me-2"></i>Add Diagnosis</h2>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Patient:</strong> {{ visit.patient }}</p>
+            <p><strong>Visit Date:</strong> {{ visit.visit_date }}</p>
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                Type a term (e.g., "hypertension") in the ICD Code field for autocomplete suggestions. If autocomplete fails, manually enter the ICD-11 code using the <a href="https://icd.who.int/browse11/l-m/en" target="_blank">ICD-11 Browser</a>.
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_icd_code" class="form-label">ICD Code <span class="text-danger">*</span></label>
+                    {{ form.icd_code }}
+                    {% if form.icd_code.errors %}
+                        <div class="invalid-feedback d-block">{{ form.icd_code.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Diagnosis Title <span class="text-danger">*</span></label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_description" class="form-label">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_inclusions" class="form-label">Inclusions</label>
+                    {{ form.inclusions }}
+                    {% if form.inclusions.errors %}
+                        <div class="invalid-feedback d-block">{{ form.inclusions.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_exclusions" class="form-label">Exclusions</label>
+                    {{ form.exclusions }}
+                    {% if form.exclusions.errors %}
+                        <div class="invalid-feedback d-block">{{ form.exclusions.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_foundation_uri" class="form-label">Foundation URI</label>
+                    {{ form.foundation_uri }}
+                    {% if form.foundation_uri.errors %}
+                        <div class="invalid-feedback d-block">{{ form.foundation_uri.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_index_terms" class="form-label">Index Terms</label>
+                    {{ form.index_terms }}
+                    {% if form.index_terms.errors %}
+                        <div class="invalid-feedback d-block">{{ form.index_terms.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_coded_elsewhere" class="form-label">Coded Elsewhere</label>
+                    {{ form.coded_elsewhere }}
+                    {% if form.coded_elsewhere.errors %}
+                        <div class="invalid-feedback d-block">{{ form.coded_elsewhere.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_related_maternal_codes" class="form-label">Related Maternal Codes</label>
+                    {{ form.related_maternal_codes }}
+                    {% if form.related_maternal_codes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.related_maternal_codes.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_related_perinatal_codes" class="form-label">Related Perinatal Codes</label>
+                    {{ form.related_perinatal_codes }}
+                    {% if form.related_perinatal_codes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.related_perinatal_codes.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_postcoordination_options" class="form-label">Postcoordination Options</label>
+                    {{ form.postcoordination_options }}
+                    {% if form.postcoordination_options.errors %}
+                        <div class="invalid-feedback d-block">{{ form.postcoordination_options.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_additional_notes" class="form-label">Additional Notes</label>
+                    {{ form.additional_notes }}
+                    {% if form.additional_notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.additional_notes.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_external_reference_link" class="form-label">External Reference Link</label>
+                    {{ form.external_reference_link }}
+                    {% if form.external_reference_link.errors %}
+                        <div class="invalid-feedback d-block">{{ form.external_reference_link.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_icd_chapter" class="form-label">ICD Chapter</label>
+                    {{ form.icd_chapter }}
+                    {% if form.icd_chapter.errors %}
+                        <div class="invalid-feedback d-block">{{ form.icd_chapter.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label for="id_internal_notes" class="form-label">Internal Notes</label>
+                    {{ form.internal_notes }}
+                    {% if form.internal_notes.errors %}
+                        <div class="invalid-feedback d-block">{{ form.internal_notes.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save</button>
+                    <a href="{% url 'manager:visit_list' %}" class="btn btn-secondary"><i class="bi bi-x-circle me-2"></i>Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/diagnosis_autocomplete.js' %}"></script>
+
+<!-- jQuery UI CSS -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+{% endblock %}

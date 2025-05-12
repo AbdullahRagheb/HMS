@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Beds List{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-hospital me-2"></i>Beds List</h2>
+    <div class="text-end mb-3">
+        <a href="{% url 'manager:bed_add'%}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add New Bed</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-building me-1"></i>Building</th>
+                    <th><i class="bi bi-ladder me-1"></i>Floor</th>
+                    <th><i class="bi bi-door-closed me-1"></i>Ward</th>
+                    <th><i class="bi bi-house-door me-1"></i>Room</th>
+                    <th><i class="bi bi-hash me-1"></i>Bed Number</th>
+                    <th><i class="bi bi-tag me-1"></i>Bed Type</th>
+                    <th><i class="bi bi-building me-1"></i>Department</th>
+                    <th><i class="bi bi-info-circle me-1"></i>Status</th>
+                    <th><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bed in beds %}
+                <tr>
+                    <td>{{ bed.building.name }}</td>
+                    <td>{{ bed.floor.name }}</td>
+                    <td>{{ bed.ward.name }}</td>
+                    <td>{{ bed.room.number }}</td>
+                    <td>{{ bed.bed_number }}</td>
+                    <td>{{ bed.get_bed_type_display }}</td>
+                    <td>{{ bed.department.name|default:"N/A" }}</td>
+                    <td>{{ bed.get_status_display }}</td>
+                    <td>
+                        <a href="{% url 'manager:edit_bed' bed.id %}" class="btn btn-sm btn-warning me-1"><i class="bi bi-pencil-fill"></i> Edit</a>
+                        <a href="{% url 'manager:delete_bed' bed.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this bed?');"><i class="bi bi-trash-fill"></i> Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="bi bi-house-x-fill me-2" style="font-size: 1.5rem;"></i>No beds available currently.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

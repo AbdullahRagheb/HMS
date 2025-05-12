@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}حذف السرير{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">حذف السرير</h2>
+    <div class="alert alert-danger">
+        هل أنت متأكد من أنك تريد حذف السرير: {{ bed.number }} - {{ bed.room }}؟
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">نعم، احذف</button>
+        <a href="{% url 'manager:bed_list' %}" class="btn btn-secondary">إلغاء</a>
+    </form>
+</div>
+{% endblock %}

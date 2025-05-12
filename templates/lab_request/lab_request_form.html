@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>New Lab Request</h2>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary">Submit Request</button>
+    <a href="{{ request.GET.next|default:request.META.HTTP_REFERER }}" class="btn btn-secondary">Back</a>
+  </form>
+{% endblock %}

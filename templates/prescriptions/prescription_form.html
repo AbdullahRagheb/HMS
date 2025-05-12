@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}New Prescription{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2><i class="bi bi-prescription me-2"></i>New Prescription</h2>
+  <div class="card">
+    <div class="card-body">
+      <p><strong>Patient:</strong> {{ form.instance.visit.patient }}</p>
+      <p><strong>Visit Date:</strong> {{ form.instance.visit.visit_date }}</p>
+
+      <form method="post" id="prescription-form">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">{{ form.medication.label }}</label>
+          {{ form.medication }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.dosage.label }}</label>
+          {{ form.dosage }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.start_date.label }}</label>
+          {{ form.start_date }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.end_date.label }}</label>
+          {{ form.end_date }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.instructions.label }}</label>
+          {{ form.instructions }}
+        </div>
+
+        <!-- your Yes/No buttons -->
+        <div class="mb-4">
+          <p class="form-label"><strong>Create a pharmacy request?</strong></p>
+          <button
+            type="submit"
+            name="send_to_pharmacy"
+            value="True"
+            class="btn btn-success me-2">
+            Yes
+          </button>
+          <button
+            type="submit"
+            name="send_to_pharmacy"
+            value="False"
+            class="btn btn-danger">
+            No
+          </button>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-2"></i>Save
+          </button>
+          <a href="{% url 'manager:visit_list' %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle me-2"></i>Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// parse the map passed from the view
+const dosageMap = JSON.parse('{{ dosage_map_json|escapejs }}');
+
+document.addEventListener('DOMContentLoaded', () => {
+  const medSelect   = document.getElementById('id_medication');
+  const dosageField = document.getElementById('id_dosage');
+
+  if (!medSelect || !dosageField) return;
+
+  // on change, fill in default dosage
+  medSelect.addEventListener('change', () => {
+    dosageField.value = dosageMap[medSelect.value] || '';
+  });
+
+  // if you want to pre-fill on page load (e.g. editing)
+  if (medSelect.value) {
+    dosageField.value = dosageMap[medSelect.value] || '';
+  }
+});
+</script>
+{% endblock %}

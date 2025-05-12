@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Delete Shift Assignment{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center fw-bold text-dark"><i class="bi bi-calendar-x me-2"></i>Delete Shift Assignment</h2>
+    <div class="card shadow-sm p-4 rounded-3">
+        <p class="text-center">
+            Are you sure you want to delete the shift assignment for <strong>{{ object.staff.get_full_name }}</strong>
+            in <strong>{{ object.work_area.name }}</strong> on <strong>{{ object.date }}</strong>
+            from schedule <strong>{{ object.schedule }}</strong>?
+            {% if user.role == 'hr' %}
+            <br>Created at: <strong>{{ object.created_at|date:"Y-m-d H:i" }}</strong>
+            {% endif %}
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-danger px-5"><i class="bi bi-trash me-2"></i>Delete</button>
+                <a href="{% url 'hr:shift_assignment_list' %}" class="btn btn-secondary px-5"><i class="bi bi-x-circle me-2"></i>Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        border-radius: 0.75rem;
+    }
+</style>
+{% endblock %}

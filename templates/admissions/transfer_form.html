@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Transfer Patient{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-arrow-left-right me-2"></i>Transfer Patient</h2>
+    <div class="card mb-4 p-4">
+        <h5 class="mb-3"><i class="bi bi-file-earmark-medical-fill me-2"></i>Current Admission</h5>
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                <p><strong><i class="bi bi-person me-1"></i>Patient:</strong> {{ admission.patient.first_name }} {{ admission.patient.last_name }}</p>
+                <p><strong><i class="bi bi-hash me-1"></i>MRN:</strong> {{ admission.patient.mrn }}</p>
+            </div>
+            <div class="col-md-6 mb-2">
+                <p><strong><i class="bi bi-building me-1"></i>Department:</strong> {{ admission.department }}</p>
+                <p><strong><i class="bi bi-hospital me-1"></i>Bed:</strong> {{ admission.bed|default:"N/A" }}</p>
+            </div>
+        </div>
+    </div>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="card mb-4 p-4">
+            <h5 class="mb-3"><i class="bi bi-arrow-left-right me-2"></i>Transfer Details</h5>
+            <div class="row align-items-end">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.transfer_type.id_for_label }}" class="form-label"><i class="bi bi-tag me-1"></i>Transfer Type <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                        {{ form.transfer_type }}
+                    </div>
+                    {% if form.transfer_type.errors %}
+                        <div class="invalid-feedback d-block">{{ form.transfer_type.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.from_department.id_for_label }}" class="form-label"><i class="bi bi-building me-1"></i>From Department</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                        {{ form.from_department }}
+                    </div>
+                    {% if form.from_department.errors %}
+                        <div class="invalid-feedback d-block">{{ form.from_department.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row align-items-end">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.to_department.id_for_label }}" class="form-label"><i class="bi bi-building me-1"></i>To Department (Internal)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                        {{ form.to_department }}
+                    </div>
+                    {% if form.to_department.errors %}
+                        <div class="invalid-feedback d-block">{{ form.to_department.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.to_hospital.id_for_label }}" class="form-label"><i class="bi bi-hospital me-1"></i>To Hospital (External)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-hospital"></i></span>
+                        {{ form.to_hospital }}
+                    </div>
+                    {% if form.to_hospital.errors %}
+                        <div class="invalid-feedback d-block">{{ form.to_hospital.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row align-items-end">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.new_bed.id_for_label }}" class="form-label"><i class="bi bi-hospital me-1"></i>New Bed (Internal)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-hospital"></i></span>
+                        {{ form.new_bed }}
+                    </div>
+                    {% if form.new_bed.errors %}
+                        <div class="invalid-feedback d-block">{{ form.new_bed.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.transfer_file.id_for_label }}" class="form-label"><i class="bi bi-file-earmark me-1"></i>Transfer File</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-file-earmark"></i></span>
+                    {{ form.transfer_file }}
+                </div>
+                {% if form.transfer_file.errors %}
+                    <div class="invalid-feedback d-block">{{ form.transfer_file.errors }}</div>
+                {% endif %}
+            </div>
+            {{ form.admission.as_hidden }}
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5"><i class="bi bi-arrow-left-right me-2"></i>Transfer Patient</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

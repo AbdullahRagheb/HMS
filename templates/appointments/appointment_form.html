@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Appointment{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">
+        <i class="bi bi-calendar-{% if form.instance.pk %}fill{% else %}plus-fill{% endif %} me-2"></i>
+        {% if form.instance.pk %}Edit{% else %}New{% endif %} Appointment
+    </h2>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="row">
+            <!-- Main Form Section -->
+            <div class="col-md-9">
+                <!-- Appointment Details Section -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-calendar-fill me-2"></i>Appointment Details</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.patient.id_for_label }}" class="form-label"><i class="bi bi-person me-1"></i>{{ form.patient.label }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                {{ form.patient }}  <!-- Identical to gender -->
+                            </div>
+                            {% if form.patient.errors %}
+                                <div class="invalid-feedback d-block">{{ form.patient.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.clinic.id_for_label }}" class="form-label"><i class="bi bi-building me-1"></i>{{ form.clinic.label }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                {{ form.clinic }}  <!-- Identical to gender -->
+                            </div>
+                            {% if form.clinic.errors %}
+                                <div class="invalid-feedback d-block">{{ form.clinic.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.department.id_for_label }}" class="form-label"><i class="bi bi-building me-1"></i>{{ form.department.label }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                {{ form.department }}  <!-- Identical to gender -->
+                            </div>
+                            {% if form.department.errors %}
+                                <div class="invalid-feedback d-block">{{ form.department.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.doctor.id_for_label }}" class="form-label"><i class="bi bi-person-badge me-1"></i>{{ form.doctor.label }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                {{ form.doctor }}  <!-- Identical to gender -->
+                            </div>
+                            {% if form.doctor.errors %}
+                                <div class="invalid-feedback d-block">{{ form.doctor.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.appointment_type.id_for_label }}" class="form-label"><i class="bi bi-tag me-1"></i>{{ form.appointment_type.label }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                {{ form.appointment_type }}  <!-- Identical to gender -->
+                            </div>
+                            {% if form.appointment_type.errors %}
+                                <div class="invalid-feedback d-block">{{ form.appointment_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.date_time.id_for_label }}" class="form-label"><i class="bi bi-calendar-event me-1"></i>{{ form.date_time.label }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                                <input type="date" class="form-control" id="{{ form.date_time.id_for_label }}" name="{{ form.date_time.name }}" value="{{ form.date_time.value|date:'Y-m-d'|default:'' }}" required>
+                            </div>
+                            {% if form.date_time.errors %}
+                                <div class="invalid-feedback d-block">{{ form.date_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label"><i class="bi bi-chat-square-text me-1"></i>{{ form.notes.label }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-chat-square-text"></i></span>
+                                {{ form.notes }}  <!-- Matches patient form textarea -->
+                            </div>
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Side Section (Optional) -->
+            <div class="col-md-3">
+                <div class="card p-4 text-center">
+                    <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Additional Info</h5>
+                    <p class="text-muted">No additional info required for appointments.</p>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-save me-2"></i>
+                {% if form.instance.pk %}Update Appointment{% else %}Save Appointment{% endif %}
+            </button>
+            <a href="{% url 'manager:appointment_list' %}" class="btn btn-secondary px-5"><i class="bi bi-x-circle me-2"></i>Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

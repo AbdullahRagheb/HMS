@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Edit Payroll{% else %}New Payroll{% endif %}{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-cash me-2"></i>{% if form.instance.pk %}Edit{% else %}New{% endif %} Payroll</h2>
+    {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="card mb-4 p-4">
+            <h5 class="mb-3"><i class="bi bi-cash-stack me-2"></i>Payroll Details</h5>
+            <div class="row g-3">
+                {% for field in form %}
+                <div class="{% if field.name == 'notes' %}col-12{% else %}col-md-6{% endif %}">
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                        <i class="bi bi-{% if field.name == 'staff' %}person{% elif field.name == 'period_start' or field.name == 'period_end' %}calendar-event{% elif field.name == 'base_salary' %}cash{% elif field.name == 'notes' %}chat-square-text{% else %}cash{% endif %} me-1"></i>
+                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-{% if field.name == 'staff' %}person{% elif field.name == 'period_start' or field.name == 'period_end' %}calendar-event{% elif field.name == 'base_salary' %}cash{% elif field.name == 'notes' %}chat-square-text{% else %}cash{% endif %}"></i>
+                        </span>
+                        {% if field.name == 'staff' %}
+                            {{ field }}
+                        {% elif field.name == 'period_start' or field.name == 'period_end' %}
+                            <input type="date" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value|date:'Y-m-d'|default:'' }}">
+                        {% elif field.name == 'base_salary' %}
+                            <input type="number" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value|default:'' }}" step="0.01">
+                        {% elif field.name == 'notes' %}
+                            <textarea class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" rows="3">{{ field.value|default:'' }}</textarea>
+                        {% else %}
+                            <input type="text" class="form-control" id="{{ field.id_for_label }}" name="{{ field.name }}" value="{{ field.value|default:'' }}">
+                        {% endif %}
+                    </div>
+                    {% if field.help_text %}
+                        <small class="text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card mb-4 p-4">
+            <h5 class="mb-3"><i class="bi bi-dash-circle me-2"></i>Deductions</h5>
+            {{ deduction_formset.management_form }}
+            {% for deduction_form in deduction_formset %}
+            <div class="deduction-formset mb-3">
+                {{ deduction_form.non_field_errors }}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="{{ deduction_form.deduction_type.id_for_label }}" class="form-label">
+                            <i class="bi bi-tag me-1"></i>Type
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                            {{ deduction_form.deduction_type }}
+                        </div>
+                        {{ deduction_form.deduction_type.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ deduction_form.amount.id_for_label }}" class="form-label">
+                            <i class="bi bi-cash me-1"></i>Amount
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-cash"></i></span>
+                            <input type="number" class="form-control" id="{{ deduction_form.amount.id_for_label }}" name="{{ deduction_form.amount.name }}" value="{{ deduction_form.amount.value|default:'' }}" step="0.01">
+                        </div>
+                        {{ deduction_form.amount.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ deduction_form.notes.id_for_label }}" class="form-label">
+                            <i class="bi bi-chat-square-text me-1"></i>Notes
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-chat-square-text"></i></span>
+                            <textarea class="form-control" id="{{ deduction_form.notes.id_for_label }}" name="{{ deduction_form.notes.name }}">{{ deduction_form.notes.value|default:'' }}</textarea>
+                        </div>
+                        {{ deduction_form.notes.errors }}
+                        {{ deduction_form.DELETE }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card mb-4 p-4">
+            <h5 class="mb-3"><i class="bi bi-plus-circle me-2"></i>Bonuses</h5>
+            {{ bonus_formset.management_form }}
+            {% for bonus_form in bonus_formset %}
+            <div class="bonus-formset mb-3">
+                {{ bonus_form.non_field_errors }}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="{{ bonus_form.bonus_type.id_for_label }}" class="form-label">
+                            <i class="bi bi-tag me-1"></i>Type
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                            {{ bonus_form.bonus_type }}
+                        </div>
+                        {{ bonus_form.bonus_type.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ bonus_form.amount.id_for_label }}" class="form-label">
+                            <i class="bi bi-cash me-1"></i>Amount
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-cash"></i></span>
+                            <input type="number" class="form-control" id="{{ bonus_form.amount.id_for_label }}" name="{{ bonus_form.amount.name }}" value="{{ bonus_form.amount.value|default:'' }}" step="0.01">
+                        </div>
+                        {{ bonus_form.amount.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ bonus_form.notes.id_for_label }}" class="form-label">
+                            <i class="bi bi-chat-square-text me-1"></i>Notes
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-chat-square-text"></i></span>
+                            <textarea class="form-control" id="{{ bonus_form.notes.id_for_label }}" name="{{ bonus_form.notes.name }}">{{ bonus_form.notes.value|default:'' }}</textarea>
+                        </div>
+                        {{ bonus_form.notes.errors }}
+                        {{ bonus_form.DELETE }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5"><i class="bi bi-save me-2"></i>Save</button>
+            <a href="{% url 'hr:payroll_list' %}" class="btn btn-secondary px-5"><i class="bi bi-x-circle me-2"></i>Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

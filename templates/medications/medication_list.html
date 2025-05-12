@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Medications{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2><i class="bi bi-capsule me-2"></i>Medications</h2>
+    <a href="{% url 'manager:medication_create' %}" class="btn btn-primary mb-3"><i class="bi bi-plus-circle me-2"></i>New Medication</a>
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for medication in medications %}
+                    <tr>
+                        <td>{{ medication.name }}</td>
+                        <td>{{ medication.description }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="text-center">No medications found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

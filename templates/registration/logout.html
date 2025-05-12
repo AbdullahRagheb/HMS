@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Logout{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-box-arrow-right me-2"></i>Logout</h2>
+    <div class="card p-4 mx-auto" style="max-width: 400px;">
+        <p>You have been logged out.</p>
+        <meta http-equiv="refresh" content="2;url={% url 'login' %}">
+        <p>Redirecting to login in 2 seconds... <a href="{% url 'login' %}" class="btn btn-primary"><i class="bi bi-box-arrow-in-right me-2"></i>Login Now</a></p>
+    </div>
+</div>
+{% endblock %}

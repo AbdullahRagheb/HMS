@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Prescription #{{ prescription.id }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h2>Prescription #{{ prescription.id }}</h2>
+  <p>
+    <strong>Patient:</strong> {{ prescription.patient }}<br>
+    <strong>Medication:</strong> {{ prescription.medication }}<br>
+    <strong>Dosage:</strong> {{ prescription.dosage }}<br>
+    <strong>Route:</strong> {{ prescription.get_route_display }}<br>
+    <strong>First Dose:</strong> {{ prescription.first_dose_date }}<br>
+    <strong>Status:</strong> {{ prescription.get_status_display }}
+  </p>
+
+  <a href="{% url 'manager:dispense_action' %}" class="btn btn-primary mb-4">
+    <i class="bi bi-upc-scan me-2"></i>Scan & Record Action
+  </a>
+
+  <h4>Dispense History</h4>
+  <ul class="list-group">
+    {% for rec in dispense_history %}
+      <li class="list-group-item">
+        {{ rec.performed_at|date:"Y-m-d H:i" }} –
+        {{ rec.get_action_display }} by {{ rec.performed_by }}
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">No dispense records yet.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

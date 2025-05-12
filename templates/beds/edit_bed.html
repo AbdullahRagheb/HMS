@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل السرير{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">تعديل بيانات السرير</h2>
+    <form method="post" class="card p-4 shadow-sm">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">تحديث</button>
+        <a href="{% url 'manager:bed_list' %}" class="btn btn-secondary">إلغاء</a>
+    </form>
+</div>
+{% endblock %}

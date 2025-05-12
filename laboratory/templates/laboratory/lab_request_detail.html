@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Lab Request #{{ object.pk }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4">Lab Request #{{ object.pk }}</h2>
+    <a href="{% url 'manager:patient_detail' object.patient.id %}" class="btn btn-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back to Patient
+    </a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <p><strong>Patient:</strong> {{ object.patient }}</p>
+      <p><strong>Status:</strong> {{ object.get_status_display }}</p>
+      <p><strong>Tests:</strong>
+        {% for test in object.tests.all %}
+          <span class="badge bg-info text-dark">{{ test.english_name }}</span>
+        {% empty %}
+          <span class="text-muted">No tests selected</span>
+        {% endfor %}
+      </p>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body text-center">
+      <h5 class="card-title">Scan this QR to advance to next stage</h5>
+      <img src="{{ qr_code_data }}" alt="QR Code for {{ scan_url }}" class="img-fluid mx-auto" style="max-width:200px;">
+      <p class="mt-2"><small class="text-muted">{{ scan_url }}</small></p>
+      {% if object.status != object.STATUS_COMPLETED %}
+        <a href="{% url 'laboratory:lab_request_scan' object.token %}"
+           class="btn btn-success mt-3">
+          <i class="bi bi-qr-code-scan me-1"></i> Simulate Scan / Advance
+        </a>
+      {% else %}
+        <span class="badge bg-success mt-3">Completed ✔️</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

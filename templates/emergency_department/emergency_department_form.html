@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}Add Emergency Department{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-exclamation-triangle me-2"></i>Add Emergency Department</h2>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="card mb-4 p-4">
+            <h5 class="mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Emergency Department Details</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.name.id_for_label }}" class="form-label"><i class="bi bi-exclamation-triangle me-1"></i>Department Name <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-exclamation-triangle"></i></span>
+                        {{ form.name|add_class:"form-control" }}
+                    </div>
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.emergency_type.id_for_label }}" class="form-label"><i class="bi bi-tag me-1"></i>Emergency Type <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                        {{ form.emergency_type|add_class:"form-select" }}
+                    </div>
+                    {% if form.emergency_type.errors %}
+                        <div class="invalid-feedback d-block">{{ form.emergency_type.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.department.id_for_label }}" class="form-label"><i class="bi bi-building me-1"></i>Department (Optional)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                        {{ form.department|add_class:"form-select" }}
+                    </div>
+                    {% if form.department.errors %}
+                        <div class="invalid-feedback d-block">{{ form.department.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.doctor.id_for_label }}" class="form-label"><i class="bi bi-person-badge me-1"></i>Doctor (Optional)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                        {{ form.doctor|add_class:"form-select" }}
+                    </div>
+                    {% if form.doctor.errors %}
+                        <div class="invalid-feedback d-block">{{ form.doctor.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.location.id_for_label }}" class="form-label"><i class="bi bi-geo-alt me-1"></i>Location</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                        {{ form.location|add_class:"form-control" }}
+                    </div>
+                    {% if form.location.errors %}
+                        <div class="invalid-feedback d-block">{{ form.location.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.capacity.id_for_label }}" class="form-label"><i class="bi bi-hospital me-1"></i>Capacity <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-hospital"></i></span>
+                        {{ form.capacity|add_class:"form-control" }}
+                    </div>
+                    {% if form.capacity.errors %}
+                        <div class="invalid-feedback d-block">{{ form.capacity.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.status.id_for_label }}" class="form-label"><i class="bi bi-info-circle me-1"></i>Status <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-info-circle"></i></span>
+                        {{ form.status|add_class:"form-select" }}
+                    </div>
+                    {% if form.status.errors %}
+                        <div class="invalid-feedback d-block">{{ form.status.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5"><i class="bi bi-save me-2"></i>Save Emergency Department</button>
+            <a href="{% url 'manager:emergency_department_list' %}" class="btn btn-secondary px-5 ms-2"><i class="bi bi-arrow-left me-2"></i>Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

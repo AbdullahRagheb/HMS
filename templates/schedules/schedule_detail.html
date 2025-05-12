@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Schedule Details{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <div class="card p-4" style="background-color: var(--card-bg);">
+        <h2 class="mb-4 text-center">
+            <i class="bi bi-calendar-fill me-2"></i>Schedule for {{ schedule.department.name }}
+        </h2>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong><i class="bi bi-building me-2"></i>Department:</strong> {{ schedule.department.name }}</p>
+                <p><strong><i class="bi bi-person me-2"></i>Staff:</strong>
+                    {% for staff in schedule.staff.all %}
+                        {{ staff.get_full_name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        None
+                    {% endfor %}
+                </p>
+                <p><strong><i class="bi bi-calendar me-2"></i>Period:</strong> {{ schedule.start_date }} to {{ schedule.end_date }}</p>
+                <p><strong><i class="bi bi-tag me-2"></i>Type:</strong> {{ schedule.get_schedule_type_display }}</p>
+                <p><strong><i class="bi bi-clock me-2"></i>Per Patient Time:</strong> {{ schedule.per_patient_time|default:"Not set" }}</p>
+                <p><strong><i class="bi bi-person me-2"></i>Created By:</strong> {{ schedule.created_by.get_full_name|default:"Unknown" }}</p>
+            </div>
+        </div>
+
+        <!-- Daily Availability -->
+        <h4 class="mt-4"><i class="bi bi-clock me-2"></i>Daily Availability</h4>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" style="background-color: var(--table-bg);">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Available From</th>
+                        <th>Available To</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for availability in daily_availability %}
+                        <tr>
+                            <td>{{ availability.get_day_of_week_display }}</td>
+                            <td>{{ availability.available_from|time:"H:i"|default:"Not available" }}</td>
+                            <td>{{ availability.available_to|time:"H:i"|default:"Not available" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">No availability set.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Shift Assignments -->
+        <h4 class="mt-4"><i class="bi bi-briefcase me-2"></i>Shift Assignments</h4>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" style="background-color: var(--table-bg);">
+                <thead>
+                    <tr>
+                        <th>Staff</th>
+                        <th>Work Area</th>
+                        <th>Shift Type</th>
+                        <th>Shift Time</th>
+                        <th>Date</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shift in shift_assignments %}
+                        <tr {% if shift.shift_type.start_time < "08:00:00" or shift.shift_type.end_time > "17:00:00" %}class="table-warning"{% endif %}>
+                            <td>{{ shift.staff.get_full_name }}</td>
+                            <td>{{ shift.work_area.name }}</td>
+                            <td>{{ shift.shift_type.name }}</td>
+                            <td>{{ shift.shift_type.start_time|time:"H:i" }} - {{ shift.shift_type.end_time|time:"H:i" }}</td>
+                            <td>{{ shift.date }}</td>
+                            <td>{{ shift.notes|default:"No notes" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No shifts assigned.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'hr:schedule_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to List
+            </a>
+            {% if request.user.role == 'hr' %}
+                <a href="{% url 'hr:schedule_update' schedule.pk %}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-2"></i>Edit Schedule
+                </a>
+                <a href="{% url 'hr:schedule_delete' schedule.pk %}" class="btn btn-danger">
+                    <i class="bi bi-trash me-2"></i>Delete Schedule
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

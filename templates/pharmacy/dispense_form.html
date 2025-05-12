@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Scan & Dispense{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h2>Scan & Record Pharmacy Action</h2>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+      {{ form.prescription_barcode.label_tag }}  
+      {{ form.prescription_barcode }}
+      {{ form.prescription_barcode.errors }}
+    </div>
+    <div class="mb-3">
+      {{ form.patient_barcode.label_tag }}  
+      {{ form.patient_barcode }}
+      {{ form.patient_barcode.errors }}
+    </div>
+    <div class="mb-3">
+      {{ form.action.label_tag }}  
+      {{ form.action }}
+      {{ form.action.errors }}
+    </div>
+    <button type="submit" class="btn btn-success">Submit</button>
+    <a href="{% url 'manager:patient_list' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

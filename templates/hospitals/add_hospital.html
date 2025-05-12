@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Hospital{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-plus-circle me-2"></i>Add New Hospital</h2>
+    <div class="card p-4 shadow">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="name" class="form-label">Hospital Name</label>
+                <input type="text" name="name" id="name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="location" class="form-label">Location</label>
+                <input type="text" name="location" id="location" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle me-2"></i>Save Hospital
+            </button>
+            <a href="{% url 'superadmin:hospital_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Hospitals
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Department Details{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="text-center mb-4"><i class="bi bi-building me-2"></i>Department: {{ department.name }}</h2>
+
+    <div class="text-center">
+        <a href="{% url 'manager:department_detail' department.id %}" class="btn btn-info me-2">
+            <i class="bi bi-info-circle me-1"></i> تفاصيل
+        </a>
+        <a href="{% url 'manager:department_doctors' department.id %}" class="btn btn-primary me-2">
+            <i class="bi bi-person-badge me-1"></i> قائمة الأطباء
+        </a>
+        <a href="{% url 'manager:department_patients' department.id %}" class="btn btn-success me-2">
+            <i class="bi bi-people me-1"></i> Admission list
+        </a>
+        <a href="{% url 'manager:department_beds' department.id %}" class="btn btn-warning me-2">
+            <i class="bi bi-bed me-1"></i> قائمة الأسرة
+        </a>
+        <a href="{% url 'manager:department_rooms' department.id %}" class="btn btn-secondary me-2">
+            <i class="bi bi-door-open me-1"></i> قائمة الغرف
+        </a>
+    </div>
+</div>
+{% endblock %}

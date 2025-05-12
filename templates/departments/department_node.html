@@ -1,0 +1,35 @@
+<li class="list-group-item">
+    <!-- زر الطي/الفرد -->
+    <span class="toggle-icon" onclick="toggleChildren(this)">
+        <i class="bi bi-chevron-down"></i>
+    </span>
+
+    <!-- اسم القسم مع الرابط -->
+    <a href="{% url 'manager:department_page' department.id %}" class="ms-2 text-decoration-none">
+        {{ department.name }} ({{ department.department_type }})
+    </a>
+
+    <!-- روابط التعديل والحذف والتفاصيل -->
+    <span class="ms-auto">
+        <a href="{% url 'manager:department_detail' department.id %}" class="text-info me-2">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="{% url 'manager:edit_department' department.id %}" class="text-warning me-2">
+            <i class="bi bi-pencil-square"></i>
+        </a>
+        <a href="{% url 'manager:delete_department' department.id %}" class="text-danger" onclick="return confirm('Are you sure you want to delete this department?');">
+            <i class="bi bi-trash"></i>
+        </a>
+    </span>
+
+    <!-- الأقسام الفرعية -->
+    {% with department.children.all as children %}
+        {% if children %}
+            <ul class="list-group ms-4">
+                {% for child in children %}
+                    {% include "departments/department_node.html" with department=child %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</li>

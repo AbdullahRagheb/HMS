@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Shift Assignments{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4 text-center fw-bold text-dark">
+        <i class="bi bi-calendar-check me-2" aria-hidden="true"></i>Shift Assignments
+    </h2>
+
+    <!-- Filters -->
+    <form id="filter-form" method="get">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label for="department-filter" class="form-label fw-medium">Department</label>
+                <select name="department" id="department-filter" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="date-filter" class="form-label fw-medium">Date</label>
+                <input type="date" name="date" id="date-filter" class="form-control" value="{{ request.GET.date }}">
+            </div>
+            <div class="col-md-4 align-self-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-2" aria-hidden="true"></i>Filter
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- HR Action Buttons -->
+    {% if user.role == 'hr' %}
+    <div class="text-end mb-4">
+        <a href="{% url 'hr:schedule_create' %}" class="btn btn-primary me-2">
+            <i class="bi bi-calendar-plus me-2" aria-hidden="true"></i>New Schedule
+        </a>
+        <a href="{% url 'hr:shift_assignment_create' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-2" aria-hidden="true"></i>New Shift Assignment
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Shift Assignments -->
+    {% for department in departments %}
+    <h3 class="mt-4 fw-bold text-dark">{{ department.name }}</h3>
+    {% for schedule in schedules %}
+    {% if schedule.department == department %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0 fw-bold">{{ schedule.schedule_type|title }} Schedule: {{ schedule.start_date }} - {{ schedule.end_date }} ({{ schedule.shift_period|title }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light sticky-header">
+                        <tr>
+                            <th scope="col"><i class="bi bi-person me-1" aria-hidden="true"></i>Staff</th>
+                            <th scope="col"><i class="bi bi-tag me-1" aria-hidden="true"></i>Role</th>
+                            <th scope="col"><i class="bi bi-building me-1" aria-hidden="true"></i>Work Area</th>
+                            <th scope="col"><i class="bi bi-calendar me-1" aria-hidden="true"></i>Date</th>
+                            {% if user.role == 'hr' %}
+                            <th scope="col"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Created At</th>
+                            {% endif %}
+                            <th scope="col"><i class="bi bi-gear me-1" aria-hidden="true"></i>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shift in shift_assignments %}
+                        {% if shift.schedule == schedule %}
+                        <tr>
+                            <td>{{ shift.staff.get_full_name|default:shift.staff.username }}</td>
+                            <td>{{ shift.staff.get_role_display }}</td>
+                            <td>{{ shift.work_area.name }}</td>
+                            <td>{{ shift.date }}</td>
+                            {% if user.role == 'hr' %}
+                            <td>{{ shift.created_at|date:"Y-m-d H:i" }}</td>
+                            {% endif %}
+                            <td>
+                                {% if user.role == 'hr' %}
+                                <a href="{% url 'hr:shift_assignment_update' shift.pk %}" class="btn btn-sm btn-warning me-1" aria-label="Edit shift">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'hr:shift_assignment_delete' shift.pk %}" class="btn btn-sm btn-danger" aria-label="Delete shift">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% else %}
+                                <a href="{% url 'hr:shift_swap_request_create' shift.pk %}" class="btn btn-sm btn-info" aria-label="Request shift swap">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user.role == 'hr' %}6{% else %}5{% endif %}" class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-x me-2" style="font-size: 1.5rem;"></i>
+                                No shifts assigned for this schedule.
+                                {% if user.role == 'hr' %}
+                                <br><a href="{% url 'hr:shift_assignment_create' %}" class="btn btn-sm btn-primary mt-2">Assign Staff</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% empty %}
+    <div class="card text-center text-muted py-5">
+        <div class="card-body">
+            <i class="bi bi-building-x me-2" style="font-size: 2rem;"></i>
+            <p>No departments or schedules found.</p>
+            {% if user.role == 'hr' %}
+            <a href="{% url 'hr:schedule_create' %}" class="btn btn-primary">Create a Schedule</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 1;
+    }
+    .table tbody tr:hover {
+        background-color: #f1f3f5;
+    }
+    .card {
+        border: none;
+        border-radius: 0.75rem;
+    }
+    .table td, .table th {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+    @media (max-width: 576px) {
+        .table th, .table td {
+            font-size: 0.9rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+        }
+    }
+</style>
+{% endblock %}

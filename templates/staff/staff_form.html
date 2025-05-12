@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Staff{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">
+        <i class="bi bi-person-{% if form.instance.pk %}fill{% else %}plus-fill{% endif %} me-2"></i>
+        {% if form.instance.pk %}Edit{% else %}New{% endif %} Staff
+    </h2>
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="row">
+            <!-- Main Form Section -->
+            <div class="col-md-9">
+                <!-- Personal Details -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-person-fill me-2"></i>Personal Details</h5>
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name in 'first_name,last_name,national_id,job_number,id_passport_number' %}
+                                <div class="col-md-6">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        <i class="bi bi-{% if field.name == 'first_name' or field.name == 'last_name' %}person{% elif field.name == 'national_id' or field.name == 'id_passport_number' %}card{% elif field.name == 'job_number' %}hash{% endif %} me-1"></i>
+                                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-{% if field.name == 'first_name' or field.name == 'last_name' %}person{% elif field.name == 'national_id' or field.name == 'id_passport_number' %}card{% elif field.name == 'job_number' %}hash{% endif %}"></i>
+                                        </span>
+                                        {{ field }}
+                                    </div>
+                                    {% if field.help_text %}
+                                        <small class="text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Job Details -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-briefcase-fill me-2"></i>Job Details</h5>
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name in 'role,departments,hire_date,contract_type,specialty,practitioner_classification' %}
+                                <div class="col-md-6">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        <i class="bi bi-{% if field.name == 'role' %}briefcase{% elif field.name == 'departments' %}building{% elif field.name == 'hire_date' %}calendar{% elif field.name == 'contract_type' %}file-earmark-text{% elif field.name == 'specialty' %}stethoscope{% elif field.name == 'practitioner_classification' %}award{% endif %} me-1"></i>
+                                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-{% if field.name == 'role' %}briefcase{% elif field.name == 'departments' %}building{% elif field.name == 'hire_date' %}calendar{% elif field.name == 'contract_type' %}file-earmark-text{% elif field.name == 'specialty' %}stethoscope{% elif field.name == 'practitioner_classification' %}award{% endif %}"></i>
+                                        </span>
+                                        {{ field }}
+                                    </div>
+                                    {% if field.help_text %}
+                                        <small class="text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Financial Details -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-currency-dollar me-2"></i>Financial Details</h5>
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name in 'salary_base,benefits,allowances' %}
+                                <div class="col-md-6">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        <i class="bi bi-currency-dollar me-1"></i>
+                                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </span>
+                                        {{ field }}
+                                    </div>
+                                    {% if field.help_text %}
+                                        <small class="text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-telephone-fill me-2"></i>Contact Information</h5>
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name in 'phone_number,email,address' %}
+                                <div class="{% if field.name == 'address' %}col-12{% else %}col-md-6{% endif %}">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        <i class="bi bi-{% if field.name == 'phone_number' %}telephone{% elif field.name == 'email' %}envelope{% elif field.name == 'address' %}geo-alt{% endif %} me-1"></i>
+                                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-{% if field.name == 'phone_number' %}telephone{% elif field.name == 'email' %}envelope{% elif field.name == 'address' %}geo-alt{% endif %}"></i>
+                                        </span>
+                                        {{ field }}
+                                    </div>
+                                    {% if field.help_text %}
+                                        <small class="text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Employment Status -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-toggle-on me-2"></i>Employment Status</h5>
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name in 'employment_status,is_active' %}
+                                <div class="col-md-6">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        <i class="bi bi-{% if field.name == 'employment_status' %}person-check{% elif field.name == 'is_active' %}toggle-on{% endif %} me-1"></i>
+                                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {% if field.name == 'is_active' %}
+                                        <div class="mt-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="{{ field.id_for_label }}" name="{{ field.name }}" value="True" {% if field.value|default_if_none:'True' %}checked{% endif %}>
+                                                <label class="form-check-label" for="{{ field.id_for_label }}">
+                                                    {% if field.value|default_if_none:'True' %}On{% else %}Off{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-person-check"></i>
+                                            </span>
+                                            {{ field }}
+                                        </div>
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                        <small class="text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Health Certificate -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-file-medical-fill me-2"></i>Health Certificate</h5>
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name == 'health_certificate' %}
+                                <div class="col-12">
+                                    <label for="{{ field.id_for_label }}" class="form-label">
+                                        <i class="bi bi-file-medical me-1"></i>
+                                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-file-medical"></i>
+                                        </span>
+                                        {{ field }}
+                                    </div>
+                                    {% if field.help_text %}
+                                        <small class="text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Certificates -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-award-fill me-2"></i>Certificates</h5>
+                    {{ certificate_formset.management_form }}
+                    <div id="certificate-formset">
+                        {% for cert_form in certificate_formset %}
+                            <div class="certificate-form row g-3 mb-3 border p-3">
+                                {% for field in cert_form %}
+                                    {% if field.name != 'DELETE' %}
+                                        <div class="col-md-4">
+                                            <label for="{{ field.id_for_label }}" class="form-label">
+                                                {{ field.label }}
+                                            </label>
+                                            {{ field }}
+                                            {% if field.errors %}
+                                                <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-4">
+                                            <div class="form-check mt-4">
+                                                {{ field }}
+                                                <label class="form-check-label" for="{{ field.id_for_label }}">
+                                                    Delete
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="add-certificate">Add Certificate</button>
+                </div>
+
+                <!-- Professional Practice Permit -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-file-earmark-check-fill me-2"></i>Professional Practice Permit</h5>
+                    {{ permit_formset.management_form }}
+                    <div id="permit-formset">
+                        {% for permit_form in permit_formset %}
+                            <div class="permit-form row g-3 mb-3 border p-3">
+                                {% for field in permit_form %}
+                                    {% if field.name != 'DELETE' %}
+                                        <div class="col-md-4">
+                                            <label for="{{ field.id_for_label }}" class="form-label">
+                                                {{ field.label }}
+                                            </label>
+                                            {{ field }}
+                                            {% if field.errors %}
+                                                <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-4">
+                                            <div class="form-check mt-4">
+                                                {{ field }}
+                                                <label class="form-check-label" for="{{ field.id_for_label }}">
+                                                    Delete
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="add-permit">Add Permit</button>
+                </div>
+
+                <!-- Health Insurance -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-shield-fill-check me-2"></i>Health Insurance</h5>
+                    {{ insurance_formset.management_form }}
+                    <div id="insurance-formset">
+                        {% for insurance_form in insurance_formset %}
+                            <div class="insurance-form row g-3 mb-3 border p-3">
+                                {% for field in insurance_form %}
+                                    {% if field.name != 'DELETE' %}
+                                        <div class="col-md-4">
+                                            <label for="{{ field.id_for_label }}" class="form-label">
+                                                {{ field.label }}
+                                            </label>
+                                            {{ field }}
+                                            {% if field.errors %}
+                                                <div class="invalid-feedback d-block">{{ field.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-4">
+                                            <div class="form-check mt-4">
+                                                {{ field }}
+                                                <label class="form-check-label" for="{{ field.id_for_label }}">
+                                                    Delete
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="add-insurance">Add Insurance</button>
+                </div>
+            </div>
+
+            <!-- Side Section -->
+            <div class="col-md-3">
+                <div class="card p-4 text-center">
+                    <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Additional Info</h5>
+                    <p class="text-muted">Ensure all required fields are filled. For doctors, practitioner classification is mandatory.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-save me-2"></i>
+                {% if form.instance.pk %}Update Staff{% else %}Save Staff{% endif %}
+            </button>
+            <a href="{% url 'hr:staff_list' %}" class="btn btn-secondary px-5">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript for Formset Management -->
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Clone empty form for certificates
+    var emptyCertificateForm = $('.certificate-form').first().clone().find('input, select').val('').end();
+    $('#add-certificate').click(function() {
+        var formCount = $('.certificate-form').length;
+        var newForm = emptyCertificateForm.clone();
+        newForm.find(':input').each(function() {
+            var name = $(this).attr('name').replace('-0-', '-' + formCount + '-');
+            var id = 'id_' + name;
+            $(this).attr({'name': name, 'id': id}).val('');
+        });
+        newForm.find('label').each(function() {
+            var forAttr = $(this).attr('for').replace('-0-', '-' + formCount + '-');
+            $(this).attr('for', forAttr);
+        });
+        $('#certificate-formset').append(newForm);
+        $('#id_form-TOTAL_FORMS').val(formCount + 1);
+    });
+
+    // Clone empty form for permits
+    var emptyPermitForm = $('.permit-form').first().clone().find('input, select').val('').end();
+    $('#add-permit').click(function() {
+        var formCount = $('.permit-form').length;
+        var newForm = emptyPermitForm.clone();
+        newForm.find(':input').each(function() {
+            var name = $(this).attr('name').replace('-0-', '-' + formCount + '-');
+            var id = 'id_' + name;
+            $(this).attr({'name': name, 'id': id}).val('');
+        });
+        newForm.find('label').each(function() {
+            var forAttr = $(this).attr('for').replace('-0-', '-' + formCount + '-');
+            $(this).attr('for', forAttr);
+        });
+        $('#permit-formset').append(newForm);
+        $('#id_form-TOTAL_FORMS').val(formCount + 1);
+    });
+
+    // Clone empty form for insurance
+    var emptyInsuranceForm = $('.insurance-form').first().clone().find('input, select').val('').end();
+    $('#add-insurance').click(function() {
+        var formCount = $('.insurance-form').length;
+        var newForm = emptyInsuranceForm.clone();
+        newForm.find(':input').each(function() {
+            var name = $(this).attr('name').replace('-0-', '-' + formCount + '-');
+            var id = 'id_' + name;
+            $(this).attr({'name': name, 'id': id}).val('');
+        });
+        newForm.find('label').each(function() {
+            var forAttr = $(this).attr('for').replace('-0-', '-' + formCount + '-');
+            $(this).attr('for', forAttr);
+        });
+        $('#insurance-formset').append(newForm);
+        $('#id_form-TOTAL_FORMS').val(formCount + 1);
+    });
+
+    // Show/hide practitioner_classification based on role
+    $('#id_role').change(function() {
+        if ($(this).val() === 'doctor') {
+            $('#id_practitioner_classification').closest('.col-md-6').show();
+            $('#id_practitioner_classification').prop('required', true);
+        } else {
+            $('#id_practitioner_classification').closest('.col-md-6').hide();
+            $('#id_practitioner_classification').prop('required', false);
+            $('#id_practitioner_classification').val('');
+        }
+    }).trigger('change');
+});
+</script>
+{% endblock %}

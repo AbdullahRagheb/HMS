@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Rooms List{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-house-door me-2"></i>Rooms List</h2>
+    <div class="text-end mb-3">
+        <a href="{% url 'manager:room_add'%}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add New Room</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash me-1"></i>Number</th>
+                    <th><i class="bi bi-door-closed me-1"></i>Ward</th>
+                    <th><i class="bi bi-building me-1"></i>Department</th>
+                    <th><i class="bi bi-people me-1"></i>Capacity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                <tr>
+                    <td>{{ room.number }}</td>
+                    <td>{{ room.ward.name }}</td>
+                    <td>{{ room.department.name }}</td>
+                    <td>{{ room.capacity }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        <i class="bi bi-house-x-fill me-2" style="font-size: 1.5rem;"></i>No rooms available currently.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

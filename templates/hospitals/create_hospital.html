@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Create Hospital{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-hospital me-2"></i>Create Hospital</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} text-center">
+                <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %} me-2"></i>{{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% if request.user.role != 'super_admin' %}
+        <div class="alert alert-danger text-center"><i class="bi bi-exclamation-triangle me-2"></i>Only Super Admins can create hospitals.</div>
+    {% else %}
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-hospital-fill me-2"></i>Hospital Details</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_name" class="form-label"><i class="bi bi-building me-1"></i>Hospital Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                            <input type="text" name="name" id="id_name" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_hospital_type" class="form-label"><i class="bi bi-tag me-1"></i>Hospital Type <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                            <select name="hospital_type" id="id_hospital_type" class="form-select" required>
+                                <option value="general">General Hospital</option>
+                                <option value="specialized">Specialized Hospital</option>
+                                <option value="clinic">Clinic</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label for="id_address" class="form-label"><i class="bi bi-geo-alt me-1"></i>Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                            <textarea name="address" id="id_address" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <h5 class="mt-4 mb-3"><i class="bi bi-person-circle me-2"></i>Hospital Manager Details</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="id_manager_username" class="form-label"><i class="bi bi-person me-1"></i>Username <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" name="manager_username" id="id_manager_username" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_manager_email" class="form-label"><i class="bi bi-envelope me-1"></i>Email <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="manager_email" id="id_manager_email" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_manager_password" class="form-label"><i class="bi bi-lock me-1"></i>Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="manager_password" id="id_manager_password" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary px-5"><i class="bi bi-plus-circle me-2"></i>Create Hospital</button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

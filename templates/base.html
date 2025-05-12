@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Patient Management{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            /* Light mode defaults */
+            --body-bg: #f5f7fa;
+            --body-color: #333;
+            --main-content-bg: #f5f7fa;
+            --sidebar-bg: linear-gradient(180deg, #007bff, #00c4ff);
+            --card-bg: white;
+            --table-bg: transparent;
+            --table-color: #333;
+            --table-border-color: #dee2e6; /* Bootstrap default border */
+            --table-hover-bg: #f1f4f8;
+            --table-striped-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Dark mode overrides */
+        body.dark-mode {
+            --body-bg: #1a1a1a;
+            --body-color: #e0e0e0;
+            --main-content-bg: #2d2d2d;
+            --sidebar-bg: linear-gradient(180deg, #1e3a8a, #3b82f6);
+            --card-bg: #3a3a3a;
+            --table-bg: transparent;
+            --table-color: #e0e0e0;
+            --table-border-color: #555;
+            --table-hover-bg: #4a4a4a;
+            --table-striped-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Apply variables */
+        body {
+            background-color: var(--body-bg);
+            font-family: 'Poppins', sans-serif;
+            color: var(--body-color);
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-bg);
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            padding-top: 20px;
+            transition: width 0.3s ease, background 0.3s ease;
+            overflow-y: auto; /* Enable scrolling */
+        }
+        .sidebar.collapsed {
+            width: 60px;
+        }
+        .sidebar .sidebar-brand {
+            color: white !important;
+            font-weight: 600;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            white-space: normal; /* Allow text wrapping */
+            overflow: visible; /* Prevent text truncation */
+            line-height: 1.2; /* Improve readability */
+        }
+        .sidebar.collapsed .sidebar-brand span {
+            display: none;
+        }
+        .sidebar .nav-link {
+            color: white !important;
+            font-weight: 500;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+        .sidebar .nav-link:hover {
+            color: #e0e0e0 !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff !important;
+            font-weight: 600;
+            border-left: 4px solid #fff;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            flex-grow: 1;
+            background-color: var(--main-content-bg);
+            transition: margin-left 0.3s ease, background-color 0.3s ease;
+        }
+        .main-content.collapsed {
+            margin-left: 60px;
+        }
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 20px;
+        }
+        .mode-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        h2, h4, h5 {
+            color: #007bff;
+            font-weight: 600;
+        }
+        body.dark-mode h2,
+        body.dark-mode h4,
+        body.dark-mode h5 {
+            color: #3b82f6;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #d1d9e6;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            background-color: #fff;
+            color: #333;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: #3a3a3a !important;
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+        body.dark-mode .form-control:focus,
+        body.dark-mode .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+        }
+        .form-label {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        body.dark-mode .form-label {
+            color: #b0b0b0;
+        }
+        .input-group-text {
+            background-color: #f8f9fa;
+            border: 1px solid #d1d9e6;
+            border-radius: 8px 0 0 8px;
+            color: #007bff;
+        }
+        body.dark-mode .input-group-text {
+            background-color: #3a3a3a;
+            border-color: #555;
+            color: #3b82f6;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #007bff, #00c4ff);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        body.dark-mode .btn-primary {
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #0056b3, #0096cc);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+        }
+        body.dark-mode .btn-primary:hover {
+            background: linear-gradient(90deg, #1e40af, #60a5fa);
+        }
+        .btn-info, .btn-warning {
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: 500;
+        }
+        body.dark-mode .btn-info {
+            background-color: #1e40af;
+            border-color: #1e40af;
+        }
+        body.dark-mode .btn-warning {
+            background-color: #d97706;
+            border-color: #d97706;
+        }
+        .table {
+            background-color: var(--table-bg);
+            color: var(--table-color);
+            border-color: var(--table-border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: none; /* Remove shadow from table, let card handle it */
+        }
+        .table thead {
+            background: linear-gradient(90deg, #007bff, #00c4ff);
+            color: white;
+        }
+        body.dark-mode .table thead {
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+        }
+        .table tbody tr:hover {
+            background-color: var(--table-hover-bg);
+            transition: background-color 0.2s ease;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: var(--table-striped-bg);
+        }
+        .table th, .table td {
+            border-color: var(--table-border-color);
+        }
+        .table td.text-center {
+            color: #666;
+        }
+        body.dark-mode .table td.text-center {
+            color: #b0b0b0 !important;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            background-color: var(--card-bg) !important;
+            transition: background-color 0.3s ease;
+        }
+        .card-body {
+            background-color: var(--card-bg) !important;
+            transition: background-color 0.3s ease;
+        }
+        body.dark-mode .card {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+        }
+        .alert {
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        .alert-success {
+            background-color: #e6f4ea;
+            color: #2e7d32;
+            border-color: #c8e6c9;
+        }
+        body.dark-mode .alert-success {
+            background-color: #2e7d32;
+            color: #e0e0e0;
+            border-color: #4caf50;
+        }
+        .alert-info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border-color: #bbdefb;
+        }
+        body.dark-mode .alert-info {
+            background-color: #1e40af;
+            color: #e0e0e0;
+            border-color: #3b82f6;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar collapsed by default -->
+    <div class="sidebar collapsed" id="sidebar">
+        <div class="d-flex align-items-center">
+            <button class="toggle-btn" id="toggleSidebar"><i class="bi bi-list"></i></button>
+            <a class="sidebar-brand" href="{% url 'manager:patient_list' %}">
+                <span>{% if settings.system_name %}{{ settings.system_name }}{% else %}Patient Management{% endif %}</span>
+            </a>
+        </div>
+        <nav class="nav flex-column">
+            {% if user.is_authenticated %}
+                {% if user.role == 'super_admin' %}
+                    <a class="nav-link {% if request.resolver_match.url_name == 'hospital_list' %}active{% endif %}" href="{% url 'superadmin:hospital_list' %}">
+                        <i class="bi bi-building me-2"></i><span>Hospitals</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'create_hospital' %}active{% endif %}" href="{% url 'superadmin:create_hospital' %}">
+                        <i class="bi bi-plus-circle me-2"></i><span>Create Hospital</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}" href="{% url 'superadmin:system_settings' %}">
+                        <i class="bi bi-gear me-2"></i><span>Settings</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}" href="{% url 'superadmin:user_list' %}">
+                        <i class="bi bi-people me-2"></i><span>Users</span>
+                    </a>
+                {% elif user.role == 'hospital_manager' %}
+                    <a class="nav-link {% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}" href="{% url 'manager:patient_list' %}">
+                        <i class="bi bi-person-lines-fill me-2"></i><span>Patients</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'admission_list' %}active{% endif %}" href="{% url 'manager:admission_list' %}">
+                        <i class="bi bi-clipboard-check me-2"></i><span>Admissions</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'appointment_list' %}active{% endif %}" href="{% url 'manager:appointment_list' %}">
+                        <i class="bi bi-calendar me-2"></i><span>Appointments</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'visit_list' %}active{% endif %}" href="{% url 'manager:visit_list' %}">
+                        <i class="bi bi-clipboard me-2"></i><span>Visits</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'clinic_list' %}active{% endif %}" href="{% url 'manager:clinic_list' %}">
+                        <i class="bi bi-building me-2"></i><span>Outpatient</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'department_list' %}active{% endif %}" href="{% url 'manager:department_list' %}">
+                        <i class="bi bi-building me-2"></i><span>Departments</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'bed_list' %}active{% endif %}" href="{% url 'manager:bed_list' %}">
+                        <i class="fas fa-bed me-2"></i><span>Beds</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'emergency_department_list' %}active{% endif %}" href="{% url 'manager:emergency_department_list' %}">
+                        <i class="bi bi-exclamation-triangle me-2"></i><span>Emergency Dept</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'surgical_operations_department_list' %}active{% endif %}" href="{% url 'manager:surgical_operations_department_list' %}">
+                        <i class="bi bi-scissors me-2"></i><span>Surgical Ops</span>
+                    </a>
+                    <!-- Pharmacy link -->
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dispense_action' %}active{% endif %}" href="{% url 'manager:dispense_action' %}">
+                        <i class="fas fa-pills me-2"></i><span>Pharmacy</span>
+                    </a>
+                    <!-- Manage Hospital Submenu -->
+                    <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#manageHospitalSubmenu" aria-expanded="false" aria-controls="manageHospitalSubmenu">
+                        <i class="bi bi-building-fill-gear me-2"></i><span>Manage Hospital</span>
+                    </a>
+                    <div class="collapse" id="manageHospitalSubmenu">
+                        <nav class="nav flex-column" style="padding-left: 20px;">
+                            <a class="nav-link" href="{% url 'manager:building_list'%}"><i class="bi bi-building me-2"></i><span>Buildings</span></a>
+                            <a class="nav-link" href="{% url 'manager:floor_list'%}"><i class="bi bi-ladder me-2"></i><span>Floors</span></a>
+                            <a class="nav-link" href="{% url 'manager:ward_list'%}"><i class="bi bi-door-closed me-2"></i><span>Wards</span></a>
+                            <a class="nav-link" href="{% url 'manager:department_list'%}"><i class="bi bi-building-fill-gear me-2"></i><span>Departments</span></a>
+                            <a class="nav-link" href="{% url 'manager:room_list'%}"><i class="bi bi-house-door me-2"></i><span>Rooms</span></a>
+                            <a class="nav-link" href="{% url 'manager:hr_user_add'%}"><i class="bi bi-person-plus me-2"></i><span>Add HR User</span></a>
+                        </nav>
+                    </div>
+                {% elif user.role == 'hr' %}
+                    <a class="nav-link {% if request.resolver_match.url_name == 'staff_list' %}active{% endif %}" href="{% url 'hr:staff_list' %}">
+                        <i class="bi bi-people me-2"></i><span>Staff</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'attendance_list' %}active{% endif %}" href="{% url 'hr:attendance_list' %}">
+                        <i class="bi bi-clock me-2"></i><span>Attendance</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'payroll_list' %}active{% endif %}" href="{% url 'hr:payroll_list' %}">
+                        <i class="bi bi-cash me-2"></i><span>Payroll</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'leave_request_list' %}active{% endif %}" href="{% url 'hr:leave_request_list' %}">
+                        <i class="bi bi-calendar-x me-2"></i><span>Leave Requests</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'schedule_list' %}active{% endif %}" href="{% url 'hr:schedule_list' %}">
+                        <i class="bi bi-calendar me-2"></i><span>Schedules</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'shift_assignment_list' %}active{% endif %}" href="{% url 'hr:shift_assignment_list' %}">
+                        <i class="bi bi-calendar-check me-2"></i><span>Shift Assignments</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'shift_swap_request_list' %}active{% endif %}" href="{% url 'hr:shift_swap_request_list' %}">
+                        <i class="bi bi-arrow-left-right me-2"></i><span>Shift Swaps</span>
+                    </a>
+                {% elif user.role in 'doctor,nurse,receptionist,pharmacist' %}
+                    <a class="nav-link {% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}" href="{% url 'staff:patient_list' %}">
+                        <i class="bi bi-person-lines-fill me-2"></i><span>Patients</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'admission_list' %}active{% endif %}" href="{% url 'staff:admission_list' %}">
+                        <i class="bi bi-clipboard-check me-2"></i><span>Admissions</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'clinic_list' %}active{% endif %}" href="{% url 'staff:clinic_list' %}">
+                        <i class="bi bi-building me-2"></i><span>Clinics</span>
+                    </a>
+                    <!-- Pharmacy link for staff -->
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dispense_action' %}active{% endif %}" href="{% url 'manager:dispense_action' %}">
+                        <i class="fas fa-pills me-2"></i><span>Pharmacy</span>
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'leave_request_list' %}active{% endif %}" href="{% url 'staff:leave_request_list' %}">
+                        <i class="bi bi-calendar-x me-2"></i><span>Leave Requests</span>
+                    </a>
+                    {% if user.role == 'doctor' %}
+                        <a class="nav-link {% if request.resolver_match.url_name == 'shift_assignment_list' %}active{% endif %}" href="{% url 'staff:shift_assignment_list' %}">
+                            <i class="bi bi-calendar-check me-2"></i><span>My Shifts</span>
+                        </a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'shift_swap_request_list' %}active{% endif %}" href="{% url 'staff:shift_swap_request_list' %}">
+                            <i class="bi bi-arrow-left-right me-2"></i><span>Shift Swaps</span>
+                        </a>
+                    {% endif %}
+                {% endif %}
+                <form action="{% url 'superadmin:logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link {% if request.resolver_match.url_name == 'logout' %}active{% endif %}" style="background:none;border:none;color:white;padding:12px 20px;display:flex;align-items:center;width:100%;text-align:left;">
+                        <i class="bi bi-box-arrow-right me-2"></i><span>Logout</span>
+                    </button>
+                </form>
+                <!-- Dark Mode Toggle (Icon Only) -->
+                <button class="mode-toggle" id="toggleDarkMode">
+                    <i class="bi bi-moon-stars-fill"></i>
+                </button>
+            {% else %}
+                <a class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}" href="{% url 'superadmin:login' %}">
+                    <i class="bi bi-box-arrow-in-right me-2"></i><span>Login</span>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    <div class="main-content collapsed" id="mainContent">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle
+        document.getElementById('toggleSidebar').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('collapsed');
+        });
+
+        // Dark Mode Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const body = document.body;
+            const toggleDarkModeBtn = document.getElementById('toggleDarkMode');
+            const darkModeIcon = toggleDarkModeBtn.querySelector('i');
+
+            // Check saved dark mode preference
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                body.classList.add('dark-mode');
+                darkModeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+            }
+
+            // Toggle dark mode on click
+            toggleDarkModeBtn.addEventListener('click', function() {
+                body.classList.toggle('dark-mode');
+                if (body.classList.contains('dark-mode')) {
+                    localStorage.setItem('darkMode', 'enabled');
+                    darkModeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                } else {
+                    localStorage.setItem('darkMode', 'disabled');
+                    darkModeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

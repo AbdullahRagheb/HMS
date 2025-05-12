@@ -1,0 +1,122 @@
+{# laboratory/templates/laboratory/testorder_form.html #}
+{% extends "base.html" %}
+{% load widget_tweaks static %}
+
+{% block title %}New Lab Request{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumb / Back link -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'manager:patient_detail' patient.id %}">
+          ← Back to {{ patient.first_name }} {{ patient.last_name }}
+        </a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">New Lab Request</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <!-- Patient Summary -->
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <img
+            src="{% if patient.photo %}{{ patient.photo.url }}{% else %}{% static 'images/patient-placeholder.png' %}{% endif %}"
+            alt="Patient photo"
+            class="rounded-circle mb-2"
+            style="width:100px; height:100px; object-fit:cover;"
+          >
+          <h5 class="card-title">{{ patient.first_name }} {{ patient.last_name }}</h5>
+          <p class="mb-1"><small><strong>MRN:</strong> {{ patient.mrn }}</small></p>
+          <p><small><strong>DOB:</strong> {{ patient.date_of_birth }}</small></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">Submit Lab Request</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Test Group -->
+            <div class="mb-3">
+              <label for="{{ form.group.id_for_label }}" class="form-label"><strong>Test Group</strong></label>
+              {{ form.group|add_class:"form-select form-select-sm" }}
+              {% if form.group.errors %}
+                <div class="text-danger small mt-1">{{ form.group.errors.as_text }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Tests with search box -->
+            <div class="mb-3">
+              <label class="form-label"><strong>Tests</strong></label>
+              <input
+                type="text"
+                id="test-search"
+                class="form-control form-control-sm mb-2"
+                placeholder="Search tests…"
+              >
+              <div class="border rounded p-2" style="max-height:250px; overflow-y:auto;">
+                {% for checkbox in form.tests %}
+                  <div class="form-check">
+                    {{ checkbox.tag|add_class:"form-check-input" }}
+                    <label class="form-check-label">{{ checkbox.choice_label }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+              {% if form.tests.errors %}
+                <div class="text-danger small mt-1">{{ form.tests.errors.as_text }}</div>
+              {% endif %}
+              <div class="form-text">Hold Ctrl/Cmd to select multiple.</div>
+            </div>
+
+            <!-- Optional Notes -->
+            {% if form.notes %}
+              <div class="mb-3">
+                <label for="{{ form.notes.id_for_label }}" class="form-label"><strong>Notes</strong></label>
+                {{ form.notes|add_class:"form-control form-control-sm" }}
+                {% if form.notes.errors %}
+                  <div class="text-danger small mt-1">{{ form.notes.errors.as_text }}</div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary btn-sm me-2">
+                <i class="bi bi-send-fill me-1"></i> Submit Lab Request
+              </button>
+              <a
+                href="{% url 'manager:patient_detail' patient.id %}"
+                class="btn btn-secondary btn-sm"
+              >
+                <i class="bi bi-x-circle me-1"></i> Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// filter the test checkboxes as you type
+document.getElementById('test-search').addEventListener('input', function(e) {
+  const term = e.target.value.toLowerCase();
+  document.querySelectorAll('.form-check').forEach(function(row) {
+    const label = row.querySelector('label').textContent.toLowerCase();
+    row.style.display = label.includes(term) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

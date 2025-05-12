@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Shift Swap Requests{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-arrow-left-right me-2"></i>Shift Swap Requests</h2>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person me-1"></i>Requester</th>
+                    <th><i class="bi bi-calendar-check me-1"></i>Requester Shift</th>
+                    <th><i class="bi bi-person me-1"></i>Partner</th>
+                    <th><i class="bi bi-calendar-check me-1"></i>Partner Shift</th>
+                    <th><i class="bi bi-clock me-1"></i>Request Date</th>
+                    <th><i class="bi bi-tag me-1"></i>Status</th>
+                    {% if user.role == 'hr' %}
+                    <th><i class="bi bi-pencil me-1"></i>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in swap_requests %}
+                <tr>
+                    <td>{{ request.requester.full_name }}</td>
+                    <td>{{ request.requester_shift.work_area }} ({{ request.requester_shift.date }})</td>
+                    <td>{{ request.partner.full_name }}</td>
+                    <td>{{ request.partner_shift.work_area }} ({{ request.partner_shift.date }})</td>
+                    <td>{{ request.request_date }}</td>
+                    <td>{{ request.get_status_display }}</td>
+                    {% if user.role == 'hr' %}
+                    <td>
+                        {% if request.status == 'pending' %}
+                        <a href="{% url 'hr:shift_swap_approval' request.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-check-circle"></i></a>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if user.role == 'hr' %}7{% else %}6{% endif %}" class="text-center text-muted py-4">
+                        <i class="bi bi-arrow-left-right me-2" style="font-size: 1.5rem;"></i>No swap requests.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

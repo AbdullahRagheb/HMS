@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+{% block title %}Add Medical Record{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-file-medical-fill me-2"></i>Add Medical Record</h2>
+    
+    <div class="icon-bar d-flex flex-wrap justify-content-center mb-4">
+        <div class="icon-btn" data-section="basic-info"><i class="bi bi-person-fill"></i><span>Basic Info</span></div>
+        <div class="icon-btn" data-section="admission-info"><i class="bi bi-hospital-fill"></i><span>Admission Info</span></div>
+        <div class="icon-btn" data-section="chief-complaints"><i class="bi bi-chat-left-text"></i><span>Chief Complaints</span></div>
+        <div class="icon-btn" data-section="hpi"><i class="bi bi-file-medical"></i><span>HPI</span></div>
+        <div class="icon-btn" data-section="ros"><i class="bi bi-check-circle"></i><span>ROS</span></div>
+        <div class="icon-btn" data-section="health-status"><i class="bi bi-heart-pulse"></i><span>Histories</span></div>
+        <div class="icon-btn" data-section="physical-exam"><i class="bi bi-stethoscope"></i><span>Physical Exam</span></div>
+        <div class="icon-btn" data-section="medical-decision"><i class="bi bi-clipboard-check"></i><span>Medical Decision</span></div>
+        <div class="icon-btn" data-section="interpretation"><i class="bi bi-graph-up"></i><span>Interpretation</span></div>
+        <div class="icon-btn" data-section="impression-plan"><i class="bi bi-list-check"></i><span>Impression and Plan</span></div>
+        <div class="icon-btn" data-section="professional-service"><i class="bi bi-briefcase"></i><span>Professional Service</span></div>
+        <div class="icon-btn" data-section="patient-education"><i class="bi bi-book"></i><span>Patient Education</span></div>
+        <div class="icon-btn" data-section="soap-note"><i class="bi bi-journal-text"></i><span>SOAP Note</span></div>
+    </div>
+
+    <h3 class="section-title">Basic Info</h3>
+
+    <form method="post" id="medical-record-form" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        <div id="basic-info" class="content section active">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-person-fill me-2"></i>Basic Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.patient.id_for_label }}" class="form-label"><i class="bi bi-person me-1"></i>Patient <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            {{ form.patient }}
+                        </div>
+                        {% if form.patient.errors %}
+                            <div class="invalid-feedback d-block">{{ form.patient.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label"><i class="bi bi-person me-1"></i>Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            {{ form.name }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.dob.id_for_label }}" class="form-label"><i class="bi bi-calendar me-1"></i>DOB</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                            {{ form.dob }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label"><i class="bi bi-geo-alt me-1"></i>Location</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                            {{ form.location }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.mrn.id_for_label }}" class="form-label"><i class="bi bi-file-earmark me-1"></i>MRN</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-file-earmark"></i></span>
+                            {{ form.mrn }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.weight.id_for_label }}" class="form-label"><i class="bi bi-scale me-1"></i>Weight (kg)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-scale"></i></span>
+                            {{ form.weight }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.height.id_for_label }}" class="form-label"><i class="bi bi-rulers me-1"></i>Height (cm)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-rulers"></i></span>
+                            {{ form.height }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div id="bmi" class="form-label">BMI: </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="admission-info" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-hospital-fill me-2"></i>Admission Information</h5>
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-info-circle me-1"></i>Source of History</label>
+                    {{ form.source_history }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-people me-1"></i>Present at Bedside</label>
+                    {{ form.present_at_bedside }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-person-lines-fill me-1"></i>Referral Source</label>
+                    {{ form.referral_source }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-exclamation-circle me-1"></i>History Limitation</label>
+                    {{ form.history_limitation }}
+                </div>
+            </div>
+        </div>
+
+        <div id="chief-complaints" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-chat-left-text me-2"></i>Chief Complaints</h5>
+                <div class="mb-3">
+                    <label for="{{ form.complaint.id_for_label }}" class="form-label"><i class="bi bi-chat-left-text me-1"></i>Chief Complaint <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
+                        {{ form.complaint }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="hpi" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-file-medical me-2"></i>History of Present Illness</h5>
+                <div class="mb-3">
+                    <label for="{{ form.hpi_onset.id_for_label }}" class="form-label">Onset</label>
+                    {{ form.hpi_onset }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.hpi_location.id_for_label }}" class="form-label">Location</label>
+                    {{ form.hpi_location }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.hpi_severity.id_for_label }}" class="form-label">Severity</label>
+                    {{ form.hpi_severity }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.hpi_duration.id_for_label }}" class="form-label">Duration</label>
+                    {{ form.hpi_duration }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.hpi_modifying_factors.id_for_label }}" class="form-label">Modifying Factors</label>
+                    {{ form.hpi_modifying_factors }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.hpi_others.id_for_label }}" class="form-label">Others</label>
+                    {{ form.hpi_others }}
+                </div>
+            </div>
+        </div>
+
+        <div id="ros" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-check-circle me-2"></i>Review of Systems</h5>
+                <div class="mb-3">
+                    <label class="form-label">Constitutional</label>
+                    {{ form.ros_constitutional }}
+                </div>
+            </div>
+        </div>
+
+        <div id="health-status" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-heart-pulse me-2"></i>Medical Histories</h5>
+                <div class="mb-3">
+                    <label for="{{ form.past_medical_history.id_for_label }}" class="form-label"><i class="bi bi-file-medical me-1"></i>Past Medical History</label>
+                    {{ form.past_medical_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.allergic_history.id_for_label }}" class="form-label"><i class="bi bi-exclamation-triangle me-1"></i>Allergic History</label>
+                    {{ form.allergic_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.social_history.id_for_label }}" class="form-label"><i class="bi bi-people me-1"></i>Social History</label>
+                    {{ form.social_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.family_history.id_for_label }}" class="form-label"><i class="bi bi-people me-1"></i>Family History</label>
+                    {{ form.family_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.past_surgical_history.id_for_label }}" class="form-label"><i class="bi bi-scissors me-1"></i>Past Surgical History</label>
+                    {{ form.past_surgical_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.medication_history.id_for_label }}" class="form-label"><i class="bi bi-capsule me-1"></i>Medication History</label>
+                    {{ form.medication_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.immunization_history.id_for_label }}" class="form-label"><i class="bi bi-shield-fill me-1"></i>Immunization History</label>
+                    {{ form.immunization_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.nutritional_history.id_for_label }}" class="form-label"><i class="bi bi-egg-fried me-1"></i>Nutritional History</label>
+                    {{ form.nutritional_history }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.psychiatric_history.id_for_label }}" class="form-label"><i class="bi bi-emoji-frown me-1"></i>Psychiatric History</label>
+                    {{ form.psychiatric_history }}
+                </div>
+            </div>
+        </div>
+
+        <div id="physical-exam" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-stethoscope me-2"></i>Physical Exam</h5>
+                <div class="mb-3">
+                    <label class="form-label">General</label>
+                    {{ form.physical_exam_general }}
+                </div>
+            </div>
+        </div>
+
+        <div id="medical-decision" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-clipboard-check me-2"></i>Medical Decision</h5>
+                <div class="mb-3">
+                    <label for="{{ form.differential_diagnoses.id_for_label }}" class="form-label">Differential Diagnoses</label>
+                    {{ form.differential_diagnoses }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.result_review.id_for_label }}" class="form-label">Result Review</label>
+                    {{ form.result_review }}
+                </div>
+            </div>
+        </div>
+
+        <div id="interpretation" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-graph-up me-2"></i>Interpretation</h5>
+                <div class="mb-3">
+                    <label for="{{ form.interpretation_labs.id_for_label }}" class="form-label">Interpretation</label>
+                    {{ form.interpretation_labs }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.laboratory_results.id_for_label }}" class="form-label">Laboratory Results</label>
+                    {{ form.laboratory_results }}
+                </div>
+            </div>
+        </div>
+
+        <div id="impression-plan" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-list-check me-2"></i>Impression and Plan</h5>
+                <div class="mb-3">
+                    <label for="{{ form.diagnosis.id_for_label }}" class="form-label">Diagnosis</label>
+                    {{ form.diagnosis }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.course.id_for_label }}" class="form-label">Course</label>
+                    {{ form.course }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.orders.id_for_label }}" class="form-label">Orders</label>
+                    {{ form.orders }}
+                </div>
+            </div>
+        </div>
+
+        <div id="professional-service" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-briefcase me-2"></i>Professional Service</h5>
+                <div class="mb-3">
+                    <label for="{{ form.professional_service.id_for_label }}" class="form-label">Professional Service</label>
+                    {{ form.professional_service }}
+                </div>
+            </div>
+        </div>
+
+        <div id="patient-education" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-book me-2"></i>Patient Education</h5>
+                <div class="mb-3">
+                    <label for="{{ form.patient_education.id_for_label }}" class="form-label">Patient Education</label>
+                    {{ form.patient_education }}
+                </div>
+            </div>
+        </div>
+
+        <div id="soap-note" class="content section">
+            <div class="card mb-4 p-4">
+                <h5 class="mb-3"><i class="bi bi-journal-text me-2"></i>SOAP Note</h5>
+                <div class="mb-3">
+                    <label for="{{ form.soap_note.id_for_label }}" class="form-label">SOAP Note</label>
+                    {{ form.soap_note }}
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons text-center mt-4">
+            <button type="submit" id="save-btn" class="btn btn-primary px-5"><i class="bi bi-save me-2"></i>Save</button>
+            <button type="button" id="delete-btn" class="btn btn-danger px-5"><i class="bi bi-trash me-2"></i>Delete</button>
+            <button type="button" id="print-settings-btn" class="btn btn-secondary px-5" data-bs-toggle="modal" data-bs-target="#printSettingsModal"><i class="bi bi-printer me-2"></i>Print PDF</button>
+        </div>
+    </form>
+
+    <div class="modal fade" id="printSettingsModal" tabindex="-1" aria-labelledby="printSettingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="printSettingsModalLabel">Print Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Select Sections to Include in PDF</h6>
+                    <form id="print-form" method="post" action="{% url 'manager:medical_record_print' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_data" id="form-data">
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="basic-info" id="print-basic-info" name="sections" checked>
+                            <label class="form-check-label" for="print-basic-info">Basic Info</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="admission-info" id="print-admission-info" name="sections" checked>
+                            <label class="form-check-label" for="print-admission-info">Admission Info</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="chief-complaints" id="print-chief-complaints" name="sections" checked>
+                            <label class="form-check-label" for="print-chief-complaints">Chief Complaints</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="hpi" id="print-hpi" name="sections" checked>
+                            <label class="form-check-label" for="print-hpi">HPI</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="ros" id="print-ros" name="sections" checked>
+                            <label class="form-check-label" for="print-ros">ROS</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="health-status" id="print-health-status" name="sections" checked>
+                            <label class="form-check-label" for="print-health-status">Histories</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="physical-exam" id="print-physical-exam" name="sections" checked>
+                            <label class="form-check-label" for="print-physical-exam">Physical Exam</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="medical-decision" id="print-medical-decision" name="sections" checked>
+                            <label class="form-check-label" for="print-medical-decision">Medical Decision</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="interpretation" id="print-interpretation" name="sections" checked>
+                            <label class="form-check-label" for="print-interpretation">Interpretation</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="impression-plan" id="print-impression-plan" name="sections" checked>
+                            <label class="form-check-label" for="print-impression-plan">Impression and Plan</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="professional-service" id="print-professional-service" name="sections" checked>
+                            <label class="form-check-label" for="print-professional-service">Professional Service</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="patient-education" id="print-patient-education" name="sections" checked>
+                            <label class="form-check-label" for="print-patient-education">Patient Education</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input print-section" type="checkbox" value="soap-note" id="print-soap-note" name="sections" checked>
+                            <label class="form-check-label" for="print-soap-note">SOAP Note</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="print-btn" class="btn btn-primary">Generate PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.icon-bar { display: flex; justify-content: center; flex-wrap: wrap; }
+.icon-btn { width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px; border: 2px solid #ccc; border-radius: 10px; background-color: #f8f9fa; transition: background-color 0.3s; cursor: pointer; text-align: center; }
+.icon-btn:hover { background-color: #e2e6ea; }
+.icon-btn i { font-size: 24px; margin-bottom: 5px; }
+.content { display: none; background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+.content.active { display: block; }
+.option-buttons { display: flex; flex-wrap: wrap; }
+.option-buttons button { margin-right: 10px; margin-bottom: 10px; background-color: #f8f9fa; color: #333; border: 1px solid #ddd; transition: background-color 0.3s, color 0.3s; }
+.option-buttons button.selected { background-color: #007bff; color: white; }
+.section-title { font-size: 24px; color: #007bff; margin-bottom: 20px; }
+.form-label { font-size: 18px; font-weight: bold; color: #333; margin-top: 10px; }
+.action-buttons button { margin: 5px; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Tab Switching
+    const iconButtons = document.querySelectorAll('.icon-btn');
+    const contentSections = document.querySelectorAll('.content');
+    const sectionTitle = document.querySelector('.section-title');
+
+    iconButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            contentSections.forEach(section => section.classList.remove('active'));
+            const sectionId = this.getAttribute('data-section');
+            document.getElementById(sectionId).classList.add('active');
+            sectionTitle.textContent = this.querySelector('span').textContent;
+        });
+    });
+
+    // Option Button Selection
+    const optionButtons = document.querySelectorAll('.option-buttons button');
+    optionButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            this.classList.toggle('selected');
+        });
+    });
+
+    // BMI Calculation
+    const weightInput = document.getElementById('id_weight');
+    const heightInput = document.getElementById('id_height');
+    const bmiDisplay = document.getElementById('bmi');
+
+    function calculateBMI() {
+        const weight = parseFloat(weightInput.value);
+        const height = parseFloat(heightInput.value);
+        if (weight && height) {
+            const bmi = (weight / ((height / 100) * (height / 100))).toFixed(2);
+            bmiDisplay.textContent = `BMI: ${bmi}`;
+        } else {
+            bmiDisplay.textContent = 'BMI: ';
+        }
+    }
+
+    weightInput.addEventListener('input', calculateBMI);
+    heightInput.addEventListener('input', calculateBMI);
+
+    // Delete Form
+    document.getElementById('delete-btn').addEventListener('click', function () {
+        if (confirm('Are you sure you want to delete this form?')) {
+            const activeSection = document.querySelector('.content.active');
+            const inputs = activeSection.querySelectorAll('input, textarea');
+            inputs.forEach(input => input.value = '');
+            const selectedOptions = activeSection.querySelectorAll('.option-buttons button.selected');
+            selectedOptions.forEach(option => option.classList.remove('selected'));
+            alert('Form cleared successfully!');
+        }
+    });
+
+    // Print PDF
+    document.getElementById('print-btn').addEventListener('click', function () {
+        const selectedSections = Array.from(document.querySelectorAll('.print-section:checked')).map(input => input.value);
+        if (selectedSections.length === 0) {
+            alert('Please select at least one section to include in the PDF.');
+            return;
+        }
+
+        // Serialize form data
+        const form = document.getElementById('medical-record-form');
+        const formData = new FormData(form);
+        const formObject = {};
+        formData.forEach((value, key) => {
+            if (formObject[key]) {
+                if (!Array.isArray(formObject[key])) {
+                    formObject[key] = [formObject[key]];
+                }
+                formObject[key].push(value);
+            } else {
+                formObject[key] = value;
+            }
+        });
+
+        // Debug: Log form data
+        console.log('Form Data:', formObject);
+
+        // Add selected sections to form data
+        document.getElementById('form-data').value = JSON.stringify(formObject);
+        document.getElementById('print-form').submit();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load form_extras %}
+
+
+{% block title %}Edit Department{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-pencil-square me-2"></i>Edit Department</h2>
+    <div class="card shadow-sm p-4">
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <!-- حقل الاسم -->
+            <div class="col-md-6">
+                <label class="form-label" for="id_name"><i class="bi bi-building me-1"></i> Department Name</label>
+                {{ form.name|add_class:"form-control" }}
+            </div>
+
+            <!-- حقل القسم الأب -->
+            <div class="col-md-6">
+                <label class="form-label" for="id_parent"><i class="bi bi-diagram-2 me-1"></i> Parent Department</label>
+                {{ form.parent|add_class:"form-select" }}
+            </div>
+
+            <!-- حقل نوع القسم -->
+            <div class="col-md-6">
+                <label class="form-label" for="id_department_type"><i class="bi bi-layers me-1"></i> Department Type</label>
+                {{ form.department_type|add_class:"form-select" }}
+            </div>
+
+            <!-- حقل المستشفى -->
+            <div class="col-md-6">
+                <label class="form-label" for="id_hospital"><i class="bi bi-hospital me-1"></i> Hospital</label>
+                {{ form.hospital|add_class:"form-select" }}
+            </div>
+
+            <!-- حقل الوصف -->
+            <div class="col-md-12">
+                <label class="form-label" for="id_description"><i class="bi bi-file-earmark-text me-1"></i> Description</label>
+                {{ form.description|add_class:"form-control" }}
+            </div>
+
+            <!-- حقل الحالة -->
+            <div class="col-md-6">
+                <label class="form-label" for="id_is_active"><i class="bi bi-check-square me-1"></i> Is Active</label>
+                {{ form.is_active|add_class:"form-check-input" }}
+            </div>
+
+            <!-- زر الحفظ -->
+            <div class="col-md-12 text-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
+                <a href="{% url 'manager:department_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

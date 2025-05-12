@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Add New Bed{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center"><i class="bi bi-hospital me-2"></i>Add New Bed</h2>
+    <form method="post" class="needs-validation" novalidate id="bed-form">
+        {% csrf_token %}
+        <div class="card mb-4 p-4">
+            <h5 class="mb-3"><i class="bi bi-hospital-fill me-2"></i>Bed Details</h5>
+            <div class="row g-3">
+                <!-- Building -->
+                <div class="col-md-6">
+                    <label for="id_building" class="form-label">
+                        <i class="bi bi-building me-1"></i>Building <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                        {{ form.building }}
+                    </div>
+                    {% for error in form.building.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <!-- Floor -->
+                <div class="col-md-6">
+                    <label for="id_floor" class="form-label">
+                        <i class="bi bi-ladder me-1"></i>Floor <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-ladder"></i></span>
+                        {{ form.floor }}
+                    </div>
+                    {% for error in form.floor.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <!-- Ward -->
+                <div class="col-md-6">
+                    <label for="id_ward" class="form-label">
+                        <i class="bi bi-door-closed me-1"></i>Ward <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-door-closed"></i></span>
+                        {{ form.ward }}
+                    </div>
+                    {% for error in form.ward.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <!-- Room -->
+                <div class="col-md-6">
+                    <label for="id_room" class="form-label">
+                        <i class="bi bi-house-door me-1"></i>Room <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-house-door"></i></span>
+                        {{ form.room }}
+                    </div>
+                    {% for error in form.room.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <!-- Bed Number -->
+                <div class="col-md-6">
+                    <label for="id_bed_number" class="form-label">
+                        <i class="bi bi-hash me-1"></i>Bed Number <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                        {{ form.bed_number }}
+                    </div>
+                    {% for error in form.bed_number.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <!-- Bed Type -->
+                <div class="col-md-6">
+                    <label for="id_bed_type" class="form-label">
+                        <i class="bi bi-tag me-1"></i>Bed Type <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                        {{ form.bed_type }}
+                    </div>
+                    {% for error in form.bed_type.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <!-- Status -->
+                <div class="col-md-6">
+                    <label for="id_status" class="form-label">
+                        <i class="bi bi-info-circle me-1"></i>Status <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-info-circle"></i></span>
+                        {{ form.status }}
+                    </div>
+                    {% for error in form.status.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5"><i class="bi bi-save me-2"></i>Save Bed</button>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Disable floor, ward, and room dropdowns initially
+    $('#id_floor').prop('disabled', true);
+    $('#id_ward').prop('disabled', true);
+    $('#id_room').prop('disabled', true);
+
+    // On Building change, update Floors
+    $('#id_building').change(function() {
+        var buildingId = $(this).val();
+        console.log("Building selected:", buildingId);
+        if (buildingId) {
+            $.ajax({
+                url: '{% url "manager:ajax_load_floors" %}',
+                data: { 'building_id': buildingId },
+                success: function(data) {
+                    console.log("Floors response:", data);
+                    $('#id_floor').html('<option value="">Select Floor</option>' + data.options);
+                    $('#id_floor').prop('disabled', false); // Enable floor dropdown
+                    $('#id_ward').html('<option value="">Select Ward</option>');
+                    $('#id_ward').prop('disabled', true); // Disable ward
+                    $('#id_room').html('<option value="">Select Room</option>');
+                    $('#id_room').prop('disabled', true); // Disable room
+                },
+                error: function(xhr, status, error) {
+                    console.error("Floors AJAX error:", error);
+                }
+            });
+        } else {
+            $('#id_floor').html('<option value="">Select Floor</option>');
+            $('#id_floor').prop('disabled', true);
+            $('#id_ward').html('<option value="">Select Ward</option>');
+            $('#id_ward').prop('disabled', true);
+            $('#id_room').html('<option value="">Select Room</option>');
+            $('#id_room').prop('disabled', true);
+        }
+    });
+
+    // On Floor change, update Wards
+    $('#id_floor').change(function() {
+        var floorId = $(this).val();
+        console.log("Floor selected:", floorId);
+        if (floorId) {
+            $.ajax({
+                url: '{% url "manager:ajax_load_wards" %}',
+                data: { 'floor_id': floorId },
+                success: function(data) {
+                    console.log("Wards response:", data);
+                    $('#id_ward').html('<option value="">Select Ward</option>' + data.options);
+                    $('#id_ward').prop('disabled', false); // Enable ward dropdown
+                    $('#id_room').html('<option value="">Select Room</option>');
+                    $('#id_room').prop('disabled', true); // Disable room
+                },
+                error: function(xhr, status, error) {
+                    console.error("Wards AJAX error:", error);
+                }
+            });
+        } else {
+            $('#id_ward').html('<option value="">Select Ward</option>');
+            $('#id_ward').prop('disabled', true);
+            $('#id_room').html('<option value="">Select Room</option>');
+            $('#id_room').prop('disabled', true);
+        }
+    });
+
+    // On Ward change, update Rooms
+    $('#id_ward').change(function() {
+        var wardId = $(this).val();
+        console.log("Ward selected:", wardId);
+        if (wardId) {
+            $.ajax({
+                url: '{% url "manager:ajax_load_rooms" %}',
+                data: { 'ward_id': wardId },
+                success: function(data) {
+                    console.log("Rooms response:", data);
+                    $('#id_room').html('<option value="">Select Room</option>' + data.options);
+                    $('#id_room').prop('disabled', false); // Enable room dropdown
+                },
+                error: function(xhr, status, error) {
+                    console.error("Rooms AJAX error:", error);
+                }
+            });
+        } else {
+            $('#id_room').html('<option value="">Select Room</option>');
+            $('#id_room').prop('disabled', true);
+        }
+    });
+});
+</script>
+{% endblock %}

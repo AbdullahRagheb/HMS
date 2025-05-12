@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="container my-4">
+    <h2>Lab Order #{{ order.id }}</h2>
+    <p><strong>Patient:</strong> {{ order.patient }}</p>
+    <p><strong>Date:</strong> {{ order.created_at|date:"Y-m-d H:i" }}</p>
+
+    <h4 class="mt-4">Samples &amp; QR Codes</h4>
+    <div class="row">
+      {% for sample in order.samples.all %}
+        <div class="col-md-4 text-center mb-3">
+          <div class="card p-3">
+            <p><strong>Sample #{{ sample.id }}</strong></p>
+            <p><small>Tube Type: {{ sample.tube_type|default:"N/A" }}</small></p>
+            {% if sample.qr_code %}
+              <img src="{{ sample.qr_code.url }}"
+                   alt="QR for sample {{ sample.id }}"
+                   style="max-width:100%;height:auto;">
+            {% else %}
+              <p class="text-muted">No QR yet</p>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center text-muted">
+          No samples generated.
+        </div>
+      {% endfor %}
+    </div>
+
+    <a href="{% url 'manager:patient_detail' order.patient.id %}"
+       class="btn btn-secondary mt-3">
+      ← Back to Patient
+    </a>
+  </div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Enroll in Program{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <h2>Enroll {{ patient.first_name }} {{ patient.last_name }} in a Program</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Enroll</button>
+  </form>
+</div>
+{% endblock %}

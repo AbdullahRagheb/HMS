@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if request.user.role == 'hr' %}Delay Settings{% else %}System Settings{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">
+        <i class="bi bi-gear me-2"></i>
+        {% if request.user.role == 'hr' %}Delay Settings{% else %}System Settings{% endif %}
+    </h2>
+    <form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="card mb-4 p-4">
+            <h5 class="mb-3">
+                <i class="bi bi-gear me-2"></i>
+                {% if request.user.role == 'hr' %}Delay Configuration{% else %}System Configuration{% endif %}
+            </h5>
+            <div class="row g-3">
+                {% for field in form %}
+                <div class="col-md-6">
+                    <label for="{{ field.id_for_label }}" class="form-label">
+                        <i class="bi bi-{% if field.name == 'delay_allowance_minutes' %}clock{% elif field.name == 'delay_deduction_percentage' %}percent{% elif field.name == 'system_name' %}building{% elif field.name == 'country' %}globe{% elif field.name == 'logo' %}image{% elif field.name == 'main_language' %}translate{% endif %} me-1"></i>
+                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-{% if field.name == 'delay_allowance_minutes' %}clock{% elif field.name == 'delay_deduction_percentage' %}percent{% elif field.name == 'system_name' %}building{% elif field.name == 'country' %}globe{% elif field.name == 'logo' %}image{% elif field.name == 'main_language' %}translate{% endif %}"></i>
+                        </span>
+                        {{ field }}
+                    </div>
+                    {% if field.help_text %}
+                        <small class="text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5"><i class="bi bi-save me-2"></i>Save</button>
+            <a href="{% url 'hr:payroll_list' %}" class="btn btn-secondary px-5"><i class="bi bi-x-circle me-2"></i>Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

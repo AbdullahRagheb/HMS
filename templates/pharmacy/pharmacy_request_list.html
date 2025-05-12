@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Pharmacy Requests</h2>
+<table class="table">
+  <thead><tr><th>Patient</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for r in requests %}
+    <tr>
+      <td>{{ r.patient.full_name }}</td>
+      <td>{{ r.created_at }}</td>
+      <td>{{ r.get_status_display }}</td>
+      <td>
+        <a href="{% url 'manager:pharmacy_request_detail' r.pk %}" class="btn btn-sm btn-info">View</a>
+        <a href="{% url 'manager:pharmacy_request_pdf' r.pk %}" class="btn btn-sm btn-secondary">Download PDF</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

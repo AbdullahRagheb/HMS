@@ -1,0 +1,17 @@
+{# templates/observation_forms/observation_form_form.html #}
+{% extends "base.html" %}
+
+{% block title %}New Observation Form{% endblock %}
+
+{% block content %}
+  <div class="container my-4">
+    <h2 class="mb-4">New Observation for {{ patient.first_name }} {{ patient.last_name }}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Save</button>
+      <a href="{% url 'manager:patient_detail' pk=patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

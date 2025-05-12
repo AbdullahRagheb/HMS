@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">
+        <i class="bi bi-gear-fill me-2"></i>{{ title }}
+    </h2>
+    <div class="card p-4">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+                <!-- Header Settings -->
+                <div class="col-md-6">
+                    <label for="{{ form.header_text.id_for_label }}" class="form-label">Header Text</label>
+                    {{ form.header_text }}
+                    <small class="text-muted">Appears at the top of each PDF page (e.g., hospital name).</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.header_image.id_for_label }}" class="form-label">Header Image</label>
+                    {{ form.header_image }}
+                    <small class="text-muted">Optional logo (recommended size: 200x50 pixels).</small>
+                </div>
+                <!-- Footer Settings -->
+                <div class="col-md-12">
+                    <label for="{{ form.footer_text.id_for_label }}" class="form-label">Footer Text</label>
+                    {{ form.footer_text }}
+                    <small class="text-muted">Appears at the bottom of each page (e.g., contact info).</small>
+                </div>
+                <!-- Data Selection -->
+                <div class="col-12">
+                    <h5 class="mt-4 mb-3">Include in PDF</h5>
+                    <div class="form-check">
+                        {{ form.include_patient_details }}
+                        <label class="form-check-label" for="{{ form.include_patient_details.id_for_label }}">
+                            Patient Details
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        {{ form.include_companion_info }}
+                        <label class="form-check-label" for="{{ form.include_companion_info.id_for_label }}">
+                            Companion Information
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        {{ form.include_medical_records }}
+                        <label class="form-check-label" for="{{ form.include_medical_records.id_for_label }}">
+                            Medical Records
+                        </label>
+                    </div>
+                </div>
+                <!-- Style Settings -->
+                <div class="col-md-6">
+                    <label for="{{ form.font_size.id_for_label }}" class="form-label">Font Size</label>
+                    {{ form.font_size }}
+                    <small class="text-muted">Table text size (8–16 points).</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.table_border_color.id_for_label }}" class="form-label">Table Border Color</label>
+                    {{ form.table_border_color }}
+                    <small class="text-muted">Color for table borders.</small>
+                </div>
+            </div>
+            <!-- Buttons -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-2"></i>Save Settings
+                </button>
+                <a href="{% url 'manager:patient_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

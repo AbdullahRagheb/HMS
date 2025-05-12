@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    {% if is_edit %}Edit Patient{% else %}New Patient Registration{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-center">
+        <i class="bi bi-person-{% if is_edit %}fill{% else %}plus-fill{% endif %} me-2"></i>
+        {% if is_edit %}Edit Patient{% else %}New Patient Registration{% endif %}
+    </h2>
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="row">
+            <!-- Main Form Section -->
+            <div class="col-md-9">
+                <!-- Personal Information Section -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-person-circle me-2"></i>Personal Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label"><i class="bi bi-person me-1"></i>First Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                {{ form.first_name }}
+                            </div>
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.middle_name.id_for_label }}" class="form-label"><i class="bi bi-person me-1"></i>Middle Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                {{ form.middle_name }}
+                            </div>
+                            {% if form.middle_name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.middle_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label"><i class="bi bi-person me-1"></i>Last Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                {{ form.last_name }}
+                            </div>
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.gender.id_for_label }}" class="form-label"><i class="bi bi-gender-ambiguous me-1"></i>Gender <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span>
+                                {{ form.gender }}
+                            </div>
+                            {% if form.gender.errors %}
+                                <div class="invalid-feedback d-block">{{ form.gender.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label"><i class="bi bi-calendar me-1"></i>Age or Date of Birth <span class="text-danger">*</span></label>
+                            <!-- Toggle between Age and Date of Birth -->
+                            <div class="mb-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="birth_input_mode" id="age_mode" value="age" checked>
+                                    <label class="form-check-label" for="age_mode">Enter Age</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="birth_input_mode" id="dob_mode" value="dob">
+                                    <label class="form-check-label" for="dob_mode">Enter Date of Birth</label>
+                                </div>
+                            </div>
+                            <!-- Age Input Fields -->
+                            <div id="age_fields" class="row g-2">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                        <input type="number" class="form-control" id="age_years" name="age_years" placeholder="Years" min="0" max="150" required>
+                                        <div class="invalid-feedback">Please enter years.</div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                        <input type="number" class="form-control" id="age_months" name="age_months" placeholder="Months" min="0" max="11" required>
+                                        <div class="invalid-feedback">Please enter months.</div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                        <input type="number" class="form-control" id="age_days" name="age_days" placeholder="Days" min="0" max="31" required>
+                                        <div class="invalid-feedback">Please enter days.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Date of Birth Input Fields -->
+                            <div id="dob_fields" class="row g-2" style="display: none;">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                        {{ form.birth_year }}
+                                    </div>
+                                    {% if form.birth_year.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.birth_year.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                        {{ form.birth_month }}
+                                    </div>
+                                    {% if form.birth_month.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.birth_month.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                        {{ form.birth_day }}
+                                    </div>
+                                    {% if form.birth_day.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.birth_day.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-clock"></i></span>
+                                        {{ form.birth_hour }}
+                                    </div>
+                                    {% if form.birth_hour.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.birth_hour.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!-- Display Calculated Values -->
+                            <div class="mt-2">
+                                <p id="calculated_dob" class="text-muted"></p>
+                                <p id="calculated_age" class="text-muted"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.death_hour.id_for_label }}" class="form-label"><i class="bi bi-clock me-1"></i>Death Hour</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-clock"></i></span>
+                                {{ form.death_hour }}
+                            </div>
+                            {% if form.death_hour.errors %}
+                                <div class="invalid-feedback d-block">{{ form.death_hour.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.national_id.id_for_label }}" class="form-label"><i class="bi bi-card-id me-1"></i>National ID <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-card-id"></i></span>
+                                {{ form.national_id }}
+                            </div>
+                            {% if form.national_id.errors %}
+                                <div class="invalid-feedback d-block">{{ form.national_id.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information Section -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-telephone-fill me-2"></i>Contact Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label"><i class="bi bi-telephone me-1"></i>Phone Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                {{ form.phone_number }}
+                            </div>
+                            {% if form.phone_number.errors %}
+                                <div class="invalid-feedback d-block">{{ form.phone_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.whatsapp_number.id_for_label }}" class="form-label"><i class="bi bi-whatsapp me-1"></i>WhatsApp Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-whatsapp"></i></span>
+                                {{ form.whatsapp_number }}
+                            </div>
+                            {% if form.whatsapp_number.errors %}
+                                <div class="invalid-feedback d-block">{{ form.whatsapp_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label"><i class="bi bi-envelope me-1"></i>Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.companion_name.id_for_label }}" class="form-label"><i class="bi bi-person me-1"></i>Companion Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                {{ form.companion_name }}
+                            </div>
+                            {% if form.companion_name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.companion_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.companion_phone.id_for_label }}" class="form-label"><i class="bi bi-telephone me-1"></i>Companion Phone</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                {{ form.companion_phone }}
+                                <a href="#" id="companion_link" class="input-group-text btn btn-info" target="_blank"><i class="bi bi-whatsapp"></i></a>
+                            </div>
+                            {% if form.companion_phone.errors %}
+                                <div class="invalid-feedback d-block">{{ form.companion_phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.companion_relationship.id_for_label }}" class="form-label"><i class="bi bi-people me-1"></i>Companion Relationship</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-people"></i></span>
+                                {{ form.companion_relationship }}
+                            </div>
+                            {% if form.companion_relationship.errors %}
+                                <div class="invalid-feedback d-block">{{ form.companion_relationship.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information Section -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-geo-alt-fill me-2"></i>Address Information</h5>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="{{ form.address.id_for_label }}" class="form-label"><i class="bi bi-geo-alt me-1"></i>Address <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                {{ form.address }}
+                            </div>
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">{{ form.address.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information Section -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Additional Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.occupation.id_for_label }}" class="form-label"><i class="bi bi-briefcase me-1"></i>Occupation</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-briefcase"></i></span>
+                                {{ form.occupation }}
+                            </div>
+                            {% if form.occupation.errors %}
+                                <div class="invalid-feedback d-block">{{ form.occupation.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.religion.id_for_label }}" class="form-label"><i class="bi bi-book me-1"></i>Religion</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-book"></i></span>
+                                {{ form.religion }}
+                            </div>
+                            {% if form.religion.errors %}
+                                <div class="invalid-feedback d-block">{{ form.religion.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.place_of_birth.id_for_label }}" class="form-label"><i class="bi bi-geo-alt me-1"></i>Place of Birth</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                {{ form.place_of_birth }}
+                            </div>
+                            {% if form.place_of_birth.errors %}
+                                <div class="invalid-feedback d-block">{{ form.place_of_birth.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Section -->
+                <div class="card mb-4 p-4">
+                    <h5 class="mb-3"><i class="bi bi-file-earmark-text-fill me-2"></i>Documents</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.passport.id_for_label }}" class="form-label"><i class="bi bi-passport me-1"></i>Passport</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-passport"></i></span>
+                                {{ form.passport }}
+                                <button type="button" class="input-group-text btn btn-secondary" onclick="openCamera('passport')"><i class="bi bi-camera"></i></button>
+                            </div>
+                            {% if form.passport.errors %}
+                                <div class="invalid-feedback d-block">{{ form.passport.errors }}</div>
+                            {% endif %}
+                            {% if patient.passport %}
+                                <p class="mt-2"><small>Current file: <a href="{{ patient.passport.url }}" target="_blank">View passport</a></small></p>
+                            {% endif %}
+                            <div id="passport_preview" class="mt-2"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.id_card.id_for_label }}" class="form-label"><i class="bi bi-card-id me-1"></i>ID Card</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-card-id"></i></span>
+                                {{ form.id_card }}
+                                <button type="button" class="input-group-text btn btn-secondary" onclick="openCamera('id_card')"><i class="bi bi-camera"></i></button>
+                            </div>
+                            {% if form.id_card.errors %}
+                                <div class="invalid-feedback d-block">{{ form.id_card.errors }}</div>
+                            {% endif %}
+                            {% if patient.id_card %}
+                                <p class="mt-2"><small>Current file: <a href="{{ patient.id_card.url }}" target="_blank">View ID card</a></small></p>
+                            {% endif %}
+                            <div id="id_card_preview" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo Section -->
+            <div class="col-md-3">
+                <div class="card p-4 text-center">
+                    <h5 class="mb-3"><i class="bi bi-camera-fill me-2"></i>Patient Photo</h5>
+                    <img src="{% if form.instance.photo %}{{ form.instance.photo.url }}{% else %}{% static 'images/default_patient_photo.jpg' %}{% endif %}" alt="Patient Photo" class="img-fluid mb-3 rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;" id="photo_display">
+                    <label for="{{ form.photo.id_for_label }}" class="form-label"><i class="bi bi-upload me-1"></i>Upload Photo</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-upload"></i></span>
+                        {{ form.photo }}
+                        <button type="button" class="input-group-text btn btn-secondary" onclick="openCamera('photo')"><i class="bi bi-camera"></i></button>
+                    </div>
+                    {% if form.photo.errors %}
+                        <div class="invalid-feedback d-block">{{ form.photo.errors }}</div>
+                    {% endif %}
+                    {% if patient.photo %}
+                        <p class="mt-2"><small>Current photo: <a href="{{ patient.photo.url }}" target="_blank">View photo</a></small></p>
+                    {% endif %}
+                    <div id="photo_preview" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-save me-2"></i>
+                {% if is_edit %}Update Patient{% else %}Save Patient{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Capture Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <video id="video" width="100%" height="auto" autoplay></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="captureImage()">Capture</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script>
+    let currentField = null;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+
+    function openCamera(field) {
+        currentField = field;
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                $('#cameraModal').modal('show');
+            })
+            .catch(err => {
+                alert('Error accessing camera: ' + err);
+            });
+    }
+
+    function captureImage() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        
+        // Stop the video stream
+        video.srcObject.getTracks().forEach(track => track.stop());
+        
+        // Set the captured image to the appropriate input
+        const fileInput = document.getElementById(`${currentField}_input`);
+        fetch(dataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+                const file = new File([blob], `${currentField}.jpg`, { type: 'image/jpeg' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                // Preview the image
+                const preview = document.getElementById(`${currentField}_preview`);
+                preview.innerHTML = `<img src="${dataUrl}" class="img-thumbnail" style="max-width: 200px;">`;
+                
+                // Update photo display if it's the profile photo
+                if (currentField === 'photo') {
+                    document.getElementById('photo_display').src = dataUrl;
+                }
+                
+                $('#cameraModal').modal('hide');
+            });
+    }
+
+    // Toggle between Age and Date of Birth fields
+    $('input[name="birth_input_mode"]').on('change', function() {
+        const mode = $(this).val();
+        if (mode === 'age') {
+            $('#age_fields').show();
+            $('#dob_fields').hide();
+            $('#age_years, #age_months, #age_days').prop('required', true);
+            $('#birth_year, #birth_month, #birth_day, #birth_hour').prop('required', false);
+        } else {
+            $('#age_fields').hide();
+            $('#dob_fields').show();
+            $('#age_years, #age_months, #age_days').prop('required', false);
+            $('#birth_year, #birth_month, #birth_day').prop('required', true);
+            $('#birth_hour').prop('required', false); // birth_hour is optional
+        }
+        updateCalculatedValues();
+    });
+
+    // Calculate age from date of birth
+    function calculateAge(year, month, day) {
+        const dob = moment(`${year}-${month}-${day}`, 'YYYY-MM-DD');
+        if (!dob.isValid()) return null;
+        const now = moment();
+        const years = now.diff(dob, 'years');
+        dob.add(years, 'years');
+        const months = now.diff(dob, 'months');
+        dob.add(months, 'months');
+        const days = now.diff(dob, 'days');
+        return { years, months, days };
+    }
+
+    // Calculate date of birth from age
+    function calculateDOB(years, months, days) {
+        const now = moment();
+        const dob = now.subtract({ years, months, days });
+        return {
+            year: dob.year(),
+            month: dob.month() + 1, // Moment months are 0-based
+            day: dob.date()
+        };
+    }
+
+    // Update calculated values
+    function updateCalculatedValues() {
+        const mode = $('input[name="birth_input_mode"]:checked').val();
+        if (mode === 'age') {
+            const years = parseInt($('#age_years').val()) || 0;
+            const months = parseInt($('#age_months').val()) || 0;
+            const days = parseInt($('#age_days').val()) || 0;
+            if (years >= 0 && months >= 0 && days >= 0) {
+                const dob = calculateDOB(years, months, days);
+                $('#birth_year').val(dob.year);
+                $('#birth_month').val(dob.month);
+                $('#birth_day').val(dob.day);
+                $('#calculated_dob').text(`Calculated DOB: ${dob.year}-${dob.month}-${dob.day}`);
+                $('#calculated_age').text('');
+            } else {
+                $('#calculated_dob').text('');
+            }
+        } else {
+            const year = $('#birth_year').val();
+            const month = $('#birth_month').val();
+            const day = $('#birth_day').val();
+            if (year && month && day) {
+                const age = calculateAge(year, month, day);
+                if (age) {
+                    $('#age_years').val(age.years);
+                    $('#age_months').val(age.months);
+                    $('#age_days').val(age.days);
+                    $('#calculated_age').text(`Calculated Age: ${age.years} years, ${age.months} months, ${age.days} days`);
+                    $('#calculated_dob').text('');
+                } else {
+                    $('#calculated_age').text('');
+                }
+            } else {
+                $('#calculated_age').text('');
+            }
+        }
+    }
+
+    // Bind input events
+    $('#age_years, #age_months, #age_days, #birth_year, #birth_month, #birth_day').on('input change', updateCalculatedValues);
+
+    // Update companion link dynamically
+    document.getElementById('companion_phone').addEventListener('input', function() {
+        const phone = this.value;
+        const link = document.getElementById('companion_link');
+        if (phone) {
+            link.href = `https://wa.me/${phone.replace(/\D/g, '')}`;
+        } else {
+            link.href = '#';
+        }
+    });
+
+    // Bootstrap validation
+    (function () {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}
