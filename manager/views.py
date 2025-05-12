@@ -70,7 +70,7 @@ from .models import (
     SurgicalOperationsDepartment, TestOrder, VitalSign, Ward, Room, Clinic, Transfer,
     MedicalRecord, Appointment, Visit, Diagnosis, Medication, Prescription,
     FollowUp, RadiologyOrder, BacteriologyResult, PACS, Program, Form,
-    Procedure
+    Procedure, PrescriptionRequestItem
 )
 
 from superadmin.models import Hospital
@@ -527,12 +527,36 @@ def admission_print(request, admission_id):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    pdfmetrics.registerFont(TTFont('Arabic', os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')))
+    # Check primary font path
+    font_path = '/Users/ye/Downloads/HMS/Janna LT Bold.ttf'
+    # Alternative paths - check in order
+    alt_paths = [
+        os.path.join(settings.BASE_DIR, 'Janna LT Bold.ttf'),
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')
+    ]
+    
+    # Try the primary path first
+    if os.path.exists(font_path):
+        pdfmetrics.registerFont(TTFont('Arabic', font_path))
+    else:
+        # Try alternative paths
+        font_registered = False
+        for alt_path in alt_paths:
+            if os.path.exists(alt_path):
+                pdfmetrics.registerFont(TTFont('Arabic', alt_path))
+                font_registered = True
+                break
+        
+        # If no font found, use a default font
+        if not font_registered:
+            # Use a standard font if Arabic font is not available
+            pdfmetrics.registerFont(TTFont('Arabic', 'Helvetica'))
 
     def prepare_arabic_text(text):
-        reshaped_text = arabic_reshaper.reshape(text)
-        bidi_text = get_display(reshaped_text)
-        return bidi_text
+        if not text:
+            return ""
+        reshaped_text = arabic_reshaper.reshape(str(text))
+        return get_display(reshaped_text)
 
     qr = qrcode.QRCode(version=1, box_size=10, border=1)
     qr.add_data(f"Admission ID: {admission_id}, Patient MRN: {patient.mrn}")
@@ -1032,7 +1056,30 @@ def medical_record_print(request):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    pdfmetrics.registerFont(TTFont('Arabic', os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')))
+    # Check primary font path
+    font_path = '/Users/ye/Downloads/HMS/Janna LT Bold.ttf'
+    # Alternative paths - check in order
+    alt_paths = [
+        os.path.join(settings.BASE_DIR, 'Janna LT Bold.ttf'),
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')
+    ]
+    
+    # Try the primary path first
+    if os.path.exists(font_path):
+        pdfmetrics.registerFont(TTFont('Arabic', font_path))
+    else:
+        # Try alternative paths
+        font_registered = False
+        for alt_path in alt_paths:
+            if os.path.exists(alt_path):
+                pdfmetrics.registerFont(TTFont('Arabic', alt_path))
+                font_registered = True
+                break
+        
+        # If no font found, use a default font
+        if not font_registered:
+            # Use a standard font if Arabic font is not available
+            pdfmetrics.registerFont(TTFont('Arabic', 'Helvetica'))
 
     def prepare_arabic_text(text):
         if not text:
@@ -1409,16 +1456,60 @@ class PrescriptionCreateView(LoginRequiredMixin, HospitalmanagerRequiredMixin, C
         return ctx
 
     def get_initial(self):
-        # … your existing initial logic …
-        return super().get_initial()
+        initial = super().get_initial()
+        patient_id = self.request.GET.get('patient')
+        if patient_id:
+            try:
+                patient = Patient.objects.get(id=patient_id, hospital=self.request.user.hospital)
+                initial['patient'] = patient
+            except Patient.DoesNotExist:
+                pass
+        return initial
 
     def form_valid(self, form):
-        # … your existing form_valid logic …
-        return super().form_valid(form)
+        prescription = form.save(commit=False)
+        
+        # Make sure the patient belongs to the user's hospital
+        if prescription.patient.hospital != self.request.user.hospital:
+            form.add_error('patient', 'You can only create prescriptions for patients in your hospital.')
+            return self.form_invalid(form)
+        
+        # Save the prescription
+        prescription.save()
+        
+        # Check if we should create a pharmacy request
+        send_to_pharmacy = self.request.POST.get('send_to_pharmacy') == 'True'
+        
+        if send_to_pharmacy:
+            # Create the prescription request
+            request = PrescriptionRequest.objects.create(
+                patient=prescription.patient,
+                create_pharmacy_request=True,
+                status='submitted'
+            )
+            
+            # Create a prescription request item
+            PrescriptionRequestItem.objects.create(
+                request=request,
+                medication=prescription.medication,
+                dosage=prescription.dosage
+            )
+            
+            # Generate QR code (handled in the model's save method)
+            request.save()
+            
+            # Notify user
+            messages.success(
+                self.request, 
+                f"Prescription created and sent to pharmacy. Request ID: #{request.pk}"
+            )
+        else:
+            messages.success(self.request, "Prescription created successfully.")
+        
+        return redirect('manager:patient_detail', pk=prescription.patient.id)
 
     def get_success_url(self):
-        # … your existing success_url logic …
-        return super().get_success_url()
+        return reverse_lazy('manager:patient_detail', kwargs={'pk': self.object.patient.id})
 
 # Radiology Order Views
 class RadiologyOrderCreateView(LoginRequiredMixin, HospitalmanagerRequiredMixin, CreateView):
@@ -2081,34 +2172,188 @@ class PharmacyRequestDetailView(DetailView):
 
 @login_required
 def pharmacy_request_scan(request, token):
+    """
+    Authenticated-only endpoint to scan a pharmacy request QR code and update its status.
+    Each scan cycles through the request status from submitted → accepted → ready → dispensed.
+    """
     pr = get_object_or_404(PrescriptionRequest, token=token)
-    # cycle through statuses
-    order = ['submitted','accepted','ready','dispensed']
+    
+    # Only allow authenticated users to scan and update status
+    if not request.user.is_authenticated:
+        messages.error(request, "You must be logged in to scan and update pharmacy requests.")
+        return redirect('login')
+    
+    # Ensure user is authorized (either belongs to the patient's hospital or is a superuser)
+    if not (request.user.is_superuser or 
+            (hasattr(request.user, 'hospital') and request.user.hospital == pr.patient.hospital)):
+        messages.error(request, "You don't have permission to update this pharmacy request.")
+        return redirect('manager:pharmacy_request_list')
+    
+    # Cycle through statuses
+    order = ['submitted', 'accepted', 'ready', 'dispensed']
     idx = order.index(pr.status)
-    if idx < len(order)-1:
-        pr.status = order[idx+1]
+    
+    if idx < len(order) - 1:
+        # Update to next status
+        old_status = pr.get_status_display()
+        pr.status = order[idx + 1]
         pr.save(update_fields=['status'])
-    return HttpResponse("OK", status=200)
+        new_status = pr.get_status_display()
+        
+        # Add success message
+        messages.success(
+            request, 
+            f"Successfully updated request #{pr.pk} status from '{old_status}' to '{new_status}'."
+        )
+    else:
+        messages.info(request, f"Request #{pr.pk} is already in its final state (Dispensed).")
+    
+    # Redirect to the detail page
+    return redirect('manager:pharmacy_request_detail', pk=pr.pk)
 
 @login_required
 def pharmacy_request_pdf_download(request, pk):
+    """
+    Generate and download a PDF for a pharmacy request with patient details,
+    medication information, and QR code for scanning.
+    """
     pr = get_object_or_404(PrescriptionRequest, pk=pk, patient__hospital=request.user.hospital)
+    
+    # Create a new PDF buffer
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer)
-    # header
-    p.drawString(50,800, f"Patient: {pr.patient.full_name} (MRN {pr.patient.mrn})")
-    p.drawString(50,780, f"Request Date: {pr.created_at.strftime('%Y-%m-%d %H:%M')}")
-    # table of items
-    y = 740
-    for item in pr.items.all():
-        p.drawString(60, y, f"- {item.medication.name}: {item.dosage}")
-        y -= 20
-    # QR
+    
+    # Use ReportLab to create a PDF
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=letter,
+        rightMargin=72, 
+        leftMargin=72,
+        topMargin=72, 
+        bottomMargin=72
+    )
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    style_title = styles['Title']
+    style_heading = styles['Heading2']
+    style_normal = styles['Normal']
+    
+    # Document elements
+    elements = []
+    
+    # Title and hospital name
+    hospital_name = pr.patient.hospital.name if hasattr(pr.patient.hospital, 'name') else "Hospital"
+    elements.append(Paragraph(f"{hospital_name} - Pharmacy Request", style_title))
+    elements.append(Spacer(1, 20))
+    
+    # Request information
+    elements.append(Paragraph("Request Information", style_heading))
+    elements.append(Spacer(1, 10))
+    
+    # Create a table for request details
+    data = [
+        ["Request ID:", f"#{pr.pk}"],
+        ["Status:", pr.get_status_display()],
+        ["Date:", pr.created_at.strftime('%Y-%m-d %H:%M')],
+    ]
+    table = Table(data, colWidths=[120, 350])
+    table.setStyle(TableStyle([
+        ('FONT', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.grey),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 20))
+    
+    # Patient information
+    elements.append(Paragraph("Patient Information", style_heading))
+    elements.append(Spacer(1, 10))
+    
+    # Create a table for patient details
+    data = [
+        ["Name:", pr.patient.full_name],
+        ["MRN:", pr.patient.mrn],
+        ["Gender:", pr.patient.gender],
+        ["Date of Birth:", pr.patient.date_of_birth.strftime('%Y-%m-%d') if pr.patient.date_of_birth else "N/A"],
+    ]
+    table = Table(data, colWidths=[120, 350])
+    table.setStyle(TableStyle([
+        ('FONT', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.grey),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 20))
+    
+    # Medications
+    elements.append(Paragraph("Medications", style_heading))
+    elements.append(Spacer(1, 10))
+    
+    # Table for medications
+    if pr.items.exists():
+        med_data = [["Medication", "Dosage"]]
+        for item in pr.items.all():
+            med_data.append([item.medication.name, item.dosage])
+        
+        med_table = Table(med_data, colWidths=[240, 230])
+        med_table.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ]))
+        elements.append(med_table)
+    else:
+        elements.append(Paragraph("No medications found for this request.", style_normal))
+    
+    elements.append(Spacer(1, 40))
+    
+    # Add QR code
     if pr.qr_code:
-        p.drawImage(pr.qr_code.path, 400,700, width=100, height=100)
-    p.showPage()
-    p.save()
+        elements.append(Paragraph("Scan QR Code to Update Status", style_heading))
+        elements.append(Spacer(1, 10))
+        
+        # Add explanation text
+        status_text = "This request has been fully processed."
+        if pr.status == 'submitted':
+            status_text = "Scan to mark as ACCEPTED"
+        elif pr.status == 'accepted':
+            status_text = "Scan to mark as READY"
+        elif pr.status == 'ready':
+            status_text = "Scan to mark as DISPENSED"
+        
+        elements.append(Paragraph(status_text, style_normal))
+        elements.append(Spacer(1, 20))
+        
+        # Load and add QR code image
+        qr_image = ImageReader(pr.qr_code.path)
+        qr = Image(qr_image, width=150, height=150)
+        qr.hAlign = 'CENTER'
+        elements.append(qr)
+    
+    # Build the PDF document
+    doc.build(elements)
+    
+    # Get the value of the buffer
     buffer.seek(0)
-    resp = HttpResponse(buffer, content_type='application/pdf')
-    resp['Content-Disposition'] = f'attachment; filename=request_{pr.pk}.pdf'
-    return resp
+    
+    # Create HTTP response with PDF
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=pharmacy_request_{pr.pk}.pdf'
+    
+    return response

@@ -5,8 +5,7 @@
   <h2><i class="bi bi-prescription me-2"></i>New Prescription</h2>
   <div class="card">
     <div class="card-body">
-      <p><strong>Patient:</strong> {{ form.instance.visit.patient }}</p>
-      <p><strong>Visit Date:</strong> {{ form.instance.visit.visit_date }}</p>
+      <p><strong>Patient:</strong> {{ form.instance.patient }}</p>
 
       <form method="post" id="prescription-form">
         {% csrf_token %}
@@ -20,42 +19,49 @@
           {{ form.dosage }}
         </div>
         <div class="mb-3">
-          <label class="form-label">{{ form.start_date.label }}</label>
-          {{ form.start_date }}
+          <label class="form-label">{{ form.route.label }}</label>
+          {{ form.route }}
         </div>
         <div class="mb-3">
-          <label class="form-label">{{ form.end_date.label }}</label>
-          {{ form.end_date }}
+          <label class="form-label">{{ form.number_of_doses.label }}</label>
+          {{ form.number_of_doses }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.total_dose.label }}</label>
+          {{ form.total_dose }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.first_dose_date.label }}</label>
+          {{ form.first_dose_date }}
         </div>
         <div class="mb-3">
           <label class="form-label">{{ form.instructions.label }}</label>
           {{ form.instructions }}
         </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.doctor.label }}</label>
+          {{ form.doctor }}
+        </div>
 
-        <!-- your Yes/No buttons -->
+        <!-- Pharmacy Request Yes/No option -->
         <div class="mb-4">
-          <p class="form-label"><strong>Create a pharmacy request?</strong></p>
-          <button
-            type="submit"
-            name="send_to_pharmacy"
-            value="True"
-            class="btn btn-success me-2">
-            Yes
-          </button>
-          <button
-            type="submit"
-            name="send_to_pharmacy"
-            value="False"
-            class="btn btn-danger">
-            No
-          </button>
+          <label class="form-label"><strong>Send to Pharmacy?</strong></label>
+          <div class="form-check">
+            <input type="radio" class="form-check-input" id="pharmacy_yes" name="send_to_pharmacy" value="True">
+            <label class="form-check-label" for="pharmacy_yes">Yes - Create pharmacy request immediately</label>
+          </div>
+          <div class="form-check">
+            <input type="radio" class="form-check-input" id="pharmacy_no" name="send_to_pharmacy" value="False" checked>
+            <label class="form-check-label" for="pharmacy_no">No - Do not create pharmacy request</label>
+          </div>
+          <small class="form-text text-muted">If "Yes" is selected, a pharmacy request will be automatically created with a QR code for tracking.</small>
         </div>
 
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save me-2"></i>Save
+            <i class="bi bi-save me-2"></i>Save Prescription
           </button>
-          <a href="{% url 'manager:visit_list' %}" class="btn btn-secondary">
+          <a href="{% url 'manager:patient_list' %}" class="btn btn-secondary">
             <i class="bi bi-x-circle me-2"></i>Cancel
           </a>
         </div>
