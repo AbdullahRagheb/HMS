@@ -44,6 +44,7 @@ class TestOrder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SUBMITTED)
     token      = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    notes      = models.TextField(blank=True, null=True, help_text="Additional notes or instructions for this lab order")
 
     def __str__(self):
         return f"Order #{self.pk} for {self.patient}"

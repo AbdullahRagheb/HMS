@@ -34,4 +34,16 @@ urlpatterns = [
     path("requests/add/", views.LabRequestCreateView.as_view(), name="lab_request_create"),
     path("requests/<int:pk>/", views.LabRequestDetailView.as_view(), name="lab_request_detail"),
     path("requests/scan/<uuid:token>/", views.lab_request_scan, name="lab_request_scan"),
+    
+    # Test management
+    path("tests/", views.TestListView.as_view(), name="test_list"),
+    path("tests/add/", views.TestCreateView.as_view(), name="test_create"),
+    path("tests/<int:pk>/edit/", views.TestUpdateView.as_view(), name="test_update"),
+    path("tests/<int:pk>/delete/", views.TestDeleteView.as_view(), name="test_delete"),
+    
+    # Test group management
+    path("test-groups/", views.TestGroupListView.as_view(), name="test_group_list"),
+    path("test-groups/add/", views.TestGroupCreateView.as_view(), name="test_group_create"),
+    path("test-groups/<int:pk>/edit/", views.TestGroupUpdateView.as_view(), name="test_group_update"),
+    path("test-groups/<int:pk>/delete/", views.TestGroupDeleteView.as_view(), name="test_group_delete"),
 ]

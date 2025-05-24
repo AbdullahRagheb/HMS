@@ -497,7 +497,7 @@ class DiagnosisForm(forms.ModelForm):
             "icd_code": forms.TextInput(attrs={
                 "class":       "form-control ctw-input",
                 "placeholder": "Enter ICD‑11 code (e.g., BA00)",
-                "id":          "icd-code",               # ← your JS targets this
+                "id":          "id_icd_code",  # Match the ID used in JavaScript
                 "autocomplete": "off",
             }),
             "name":               forms.TextInput(attrs={"class": "form-control"}),
@@ -535,7 +535,7 @@ class DiagnosisForm(forms.ModelForm):
         # very loose format check: letter(s) + digit(s), optional dot segment
         import re
         if not re.fullmatch(r"[A-Z]{1,3}[0-9]{1,3}(\.[A-Z0-9]{1,3})?", code):
-            raise forms.ValidationError("That doesn’t look like a valid ICD‑11 code.")
+            raise forms.ValidationError("That doesn't look like a valid ICD‑11 code.")
         return code
 
 
@@ -850,30 +850,60 @@ class ProcedureForm(forms.ModelForm):
                 f.widget.attrs['class'] = 'form-control'
 
 class PDFSettingsForm(forms.ModelForm):
+    """
+    Form for customizing PDF layout and settings.
+    """
+    TABLE_BORDER_COLORS = [
+        ('black', 'Black'),
+        ('grey', 'Grey'),
+        ('darkblue', 'Dark Blue'),
+        ('darkgreen', 'Dark Green'),
+        ('darkred', 'Dark Red'),
+    ]
+    
+    font_size = forms.IntegerField(
+        min_value=8, 
+        max_value=14,
+        initial=10,
+        help_text="Font size for text in tables (8-14)"
+    )
+    
+    table_border_color = forms.ChoiceField(
+        choices=TABLE_BORDER_COLORS,
+        initial='grey',
+        help_text="Color for table borders"
+    )
+    
+    # Content toggle switches
+    include_hospital_logo = forms.BooleanField(required=False, initial=True)
+    include_patient_details = forms.BooleanField(required=False, initial=True)
+    include_medical_records = forms.BooleanField(required=False, initial=True)
+    include_companion_info = forms.BooleanField(required=False, initial=True)
+    
+    # Medical record section toggles
+    include_basic_info = forms.BooleanField(required=False, initial=True)
+    include_complaint = forms.BooleanField(required=False, initial=True)
+    include_allergies = forms.BooleanField(required=False, initial=True)
+    include_medical_history = forms.BooleanField(required=False, initial=True)
+    include_physical_exam = forms.BooleanField(required=False, initial=True)
+    include_diagnosis = forms.BooleanField(required=False, initial=True)
+    
     class Meta:
-        model   = PDFSettings
-        fields  = [
-            'header_text', 'footer_text', 'header_image',
-            'include_patient_details', 'include_companion_info', 'include_medical_records',
-            'font_size', 'table_border_color'
+        model = PDFSettings
+        fields = [
+            'header_text', 'header_image', 'footer_text',
+            'font_size', 'table_border_color',
+            'include_hospital_logo', 'include_patient_details',
+            'include_medical_records', 'include_companion_info',
+            'include_basic_info', 'include_complaint',
+            'include_allergies', 'include_medical_history',
+            'include_physical_exam', 'include_diagnosis',
         ]
-        widgets = {
-            'header_text':  forms.TextInput(attrs={'class': 'form-control'}),
-            'footer_text':  forms.TextInput(attrs={'class': 'form-control'}),
-            'header_image': forms.FileInput(attrs={'class': 'form-control'}),
-            'include_patient_details': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'include_companion_info':  forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'include_medical_records': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'font_size':              forms.NumberInput(attrs={'class': 'form-control', 'min':8, 'max':16}),
-            'table_border_color':     forms.Select(attrs={'class': 'form-select'}, choices=[
-                ('grey', 'Grey'), ('black', 'Black'), ('blue', 'Blue'), ('red', 'Red'),
-            ]),
-        }
 
     def clean_font_size(self):
         size = self.cleaned_data['font_size']
-        if not 8 <= size <= 16:
-            raise ValidationError("Font size must be between 8 and 16.")
+        if not 8 <= size <= 14:
+            raise ValidationError("Font size must be between 8 and 14.")
         return size
     
 class ImmunizationForm(forms.ModelForm):

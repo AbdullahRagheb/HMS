@@ -4,40 +4,118 @@
 
 {% block content %}
 <div class="container my-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h4">Lab Request #{{ object.pk }}</h2>
-    <a href="{% url 'manager:patient_detail' object.patient.id %}" class="btn btn-secondary">
-      <i class="bi bi-arrow-left me-1"></i> Back to Patient
-    </a>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-body">
-      <p><strong>Patient:</strong> {{ object.patient }}</p>
-      <p><strong>Status:</strong> {{ object.get_status_display }}</p>
-      <p><strong>Tests:</strong>
-        {% for test in object.tests.all %}
-          <span class="badge bg-info text-dark">{{ test.english_name }}</span>
-        {% empty %}
-          <span class="text-muted">No tests selected</span>
-        {% endfor %}
-      </p>
+  <h2 class="mb-4"><i class="bi bi-file-medical me-2"></i>Lab Request #{{ object.pk }}</h2>
+  
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-4 p-4">
+        <h4 class="mb-3">Request Information</h4>
+        <div class="mb-3">
+          <p><strong>Patient:</strong> {{ object.patient.full_name }}</p>
+          <p><strong>MRN:</strong> {{ object.patient.mrn }}</p>
+          <p><strong>Status:</strong> 
+            {% if object.status == 'submitted' %}
+              <span class="badge bg-info">{{ object.get_status_display }}</span>
+            {% elif object.status == 'accepted' %}
+              <span class="badge bg-warning">{{ object.get_status_display }}</span>
+            {% elif object.status == 'collected' %}
+              <span class="badge bg-primary">{{ object.get_status_display }}</span>
+            {% elif object.status == 'completed' %}
+              <span class="badge bg-success">{{ object.get_status_display }}</span>
+            {% endif %}
+          </p>
+          <p><strong>Request Date:</strong> {{ object.created_at|date:"Y-m-d H:i" }}</p>
+          {% if object.group %}
+          <p><strong>Test Group:</strong> {{ object.group.name }}</p>
+          {% endif %}
+        </div>
+        
+        <h4 class="mb-3">Tests</h4>
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered">
+            <thead class="table-primary">
+              <tr>
+                <th>Test</th>
+                <th>Category</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for test in object.tests.all %}
+              <tr>
+                <td>{{ test.english_name }}</td>
+                <td>{% if test.category %}{{ test.category }}{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
+                <td>{% if test.description %}{{ test.description }}{% else %}<span class="text-muted">No description</span>{% endif %}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-4">
+                  <i class="bi bi-inbox me-2" style="font-size: 1.5rem;"></i>No tests found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-body text-center">
-      <h5 class="card-title">Scan this QR to advance to next stage</h5>
-      <img src="{{ qr_code_data }}" alt="QR Code for {{ scan_url }}" class="img-fluid mx-auto" style="max-width:200px;">
-      <p class="mt-2"><small class="text-muted">{{ scan_url }}</small></p>
-      {% if object.status != object.STATUS_COMPLETED %}
-        <a href="{% url 'laboratory:lab_request_scan' object.token %}"
-           class="btn btn-success mt-3">
-          <i class="bi bi-qr-code-scan me-1"></i> Simulate Scan / Advance
-        </a>
-      {% else %}
-        <span class="badge bg-success mt-3">Completed ✔️</span>
-      {% endif %}
+    
+    <div class="col-md-4">
+      <div class="card mb-4 p-4">
+        <h4 class="mb-3">QR Code</h4>
+        <div class="text-center mb-3">
+          {% if qr_code_data %}
+          <img src="{{ qr_code_data }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+          <p class="mt-3 text-muted">Scan this QR code to update request status</p>
+          {% else %}
+          <div class="alert alert-warning">
+            <p class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>No QR code available for this request.</p>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if user.is_authenticated %}
+        <div class="mt-3">
+          <h5>Status Progression</h5>
+          <div class="progress mb-3">
+            <div class="progress-bar bg-info" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Submitted</div>
+            <div class="progress-bar {% if object.status == 'accepted' or object.status == 'collected' or object.status == 'completed' %}bg-warning{% else %}bg-secondary{% endif %}" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Accepted</div>
+            <div class="progress-bar {% if object.status == 'collected' or object.status == 'completed' %}bg-primary{% else %}bg-secondary{% endif %}" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Collected</div>
+            <div class="progress-bar {% if object.status == 'completed' %}bg-success{% else %}bg-secondary{% endif %}" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Completed</div>
+          </div>
+          
+          {% if object.status != 'completed' %}
+          <div class="alert alert-info">
+            <p class="mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              {% if object.status == 'submitted' %}
+                Scan the QR code to mark this request as <strong>Accepted</strong>
+              {% elif object.status == 'accepted' %}
+                Scan the QR code to mark this request as <strong>Collected</strong>
+              {% elif object.status == 'collected' %}
+                Scan the QR code to mark this request as <strong>Completed</strong>
+              {% endif %}
+            </p>
+          </div>
+          
+          <!-- Simulation link (for development purposes) -->
+          <a href="{% url 'laboratory:lab_request_scan' object.token %}" class="btn btn-warning d-block mb-3">
+            <i class="bi bi-qr-code-scan me-2"></i>Simulate QR Scan
+          </a>
+          {% else %}
+          <div class="alert alert-success">
+            <p class="mb-0"><i class="bi bi-check-circle me-2"></i>This lab request has been fully processed and completed.</p>
+          </div>
+          {% endif %}
+        {% endif %}
+        </div>
+        
+        <div class="mt-3">
+          <a href="{% url 'manager:patient_detail' object.patient.id %}" class="btn btn-secondary d-block">
+            <i class="bi bi-arrow-left me-2"></i>Back to Patient
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>

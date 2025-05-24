@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}PDF Settings{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4 text-center">PDF Settings</h1>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Customize PDF Layout and Content</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5>General Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="{{ form.header_text.id_for_label }}" class="form-label">Header Text</label>
+                                    {{ form.header_text }}
+                                    <div class="form-text">Text to display at the top of each PDF</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.header_image.id_for_label }}" class="form-label">Header Logo</label>
+                                    {{ form.header_image }}
+                                    <div class="form-text">Hospital logo to display at the top of each PDF</div>
+                                    {% if form.instance.header_image %}
+                                    <div class="mt-2">
+                                        <img src="{{ form.instance.header_image.url }}" alt="Current Logo" style="max-height: 50px; max-width: 200px;">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.footer_text.id_for_label }}" class="form-label">Footer Text</label>
+                                    {{ form.footer_text }}
+                                    <div class="form-text">Text to display at the bottom of each PDF</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.font_size.id_for_label }}" class="form-label">Font Size</label>
+                                    {{ form.font_size }}
+                                    <div class="form-text">Size of text in the PDF</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.table_border_color.id_for_label }}" class="form-label">Table Border Color</label>
+                                    {{ form.table_border_color }}
+                                    <div class="form-text">Color of table borders in the PDF</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5>Content Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    {{ form.include_hospital_logo }}
+                                    <label class="form-check-label" for="{{ form.include_hospital_logo.id_for_label }}">
+                                        Include Hospital Logo
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    {{ form.include_patient_details }}
+                                    <label class="form-check-label" for="{{ form.include_patient_details.id_for_label }}">
+                                        Include Patient Details
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    {{ form.include_medical_records }}
+                                    <label class="form-check-label" for="{{ form.include_medical_records.id_for_label }}">
+                                        Include Medical Records
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    {{ form.include_companion_info }}
+                                    <label class="form-check-label" for="{{ form.include_companion_info.id_for_label }}">
+                                        Include Companion Information
+                                    </label>
+                                </div>
+                                
+                                <h6 class="mt-4 mb-3">Medical Record Sections (for Print)</h6>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    {{ form.include_basic_info }}
+                                    <label class="form-check-label" for="{{ form.include_basic_info.id_for_label }}">
+                                        Include Basic Information
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    {{ form.include_complaint }}
+                                    <label class="form-check-label" for="{{ form.include_complaint.id_for_label }}">
+                                        Include Chief Complaint
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    {{ form.include_allergies }}
+                                    <label class="form-check-label" for="{{ form.include_allergies.id_for_label }}">
+                                        Include Allergies
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    {{ form.include_medical_history }}
+                                    <label class="form-check-label" for="{{ form.include_medical_history.id_for_label }}">
+                                        Include Medical History
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    {{ form.include_physical_exam }}
+                                    <label class="form-check-label" for="{{ form.include_physical_exam.id_for_label }}">
+                                        Include Physical Examination
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    {{ form.include_diagnosis }}
+                                    <label class="form-check-label" for="{{ form.include_diagnosis.id_for_label }}">
+                                        Include Diagnosis
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add form field classes for styling
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form inputs
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="number"]');
+        textInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+        
+        const selectInputs = document.querySelectorAll('select');
+        selectInputs.forEach(select => {
+            select.classList.add('form-select');
+        });
+        
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+        
+        const checkboxInputs = document.querySelectorAll('input[type="checkbox"]');
+        checkboxInputs.forEach(checkbox => {
+            checkbox.classList.add('form-check-input');
+        });
+    });
+</script>
+{% endblock %} 

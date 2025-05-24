@@ -105,7 +105,7 @@ class Bed(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
 
     def __str__(self):
-        return f"{self.get_bed_type_display()} – {self.room} (Bed {self.bed_number})"
+        return f"{self.get_bed_type_display()} – {self.room} (Bed {self.bed_number})"
 
     @property
     def building(self):
@@ -169,6 +169,12 @@ class Patient(models.Model):
         return f"{self.first_name} {self.last_name} (MRN {self.mrn})"
 
     # calculated properties
+    @property
+    def full_name(self):
+        if self.middle_name:
+            return f"{self.first_name} {self.middle_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
+        
     @property
     def date_of_birth(self):
         if self.birth_year and self.birth_month and self.birth_day:
@@ -278,7 +284,7 @@ class MedicalRecord(models.Model):
     soap_note = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Medical Record – {self.patient} ({self.created_at:%Y-%m-%d})"
+        return f"Medical Record – {self.patient} ({self.created_at:%Y-%m-%d})"
 
 
 # ───────────────────────────  ADMISSION  ───────────────────────────
@@ -639,29 +645,45 @@ class FollowUp(models.Model):
     status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('completed', 'Completed')], default='pending')
 
     def __str__(self):
-        return f"Follow‑up {self.pk} – {self.prescription}"
+        return f"Follow-up {self.pk} – {self.prescription}"
 
 
 # ───────────────────────────  PDF SETTINGS  ───────────────────────────
 class PDFSettings(models.Model):
-    hospital = models.OneToOneField('superadmin.Hospital', on_delete=models.CASCADE, related_name='pdf_settings')
-    header_text = models.CharField(max_length=200, blank=True)
-    footer_text = models.CharField(max_length=200, blank=True)
-    header_image = models.ImageField(upload_to='pdf_headers/', null=True, blank=True)
-    include_patient_details = models.BooleanField(default=True)
-    include_companion_info = models.BooleanField(default=True)
-    include_medical_records = models.BooleanField(default=True)
-    font_size = models.IntegerField(default=12)
+    """
+    Settings for PDF generation, stored per-hospital.
+    """
+    hospital = models.OneToOneField(
+        'superadmin.Hospital',
+        on_delete=models.CASCADE,
+        related_name='pdf_settings'
+    )
+    
+    # Header and footer
+    header_text = models.CharField(max_length=255, blank=True, null=True)
+    header_image = models.ImageField(upload_to='pdf_headers/', blank=True, null=True)
+    footer_text = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Style settings
+    font_size = models.IntegerField(default=10)
     table_border_color = models.CharField(max_length=20, default='grey')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "PDF Setting"
-        verbose_name_plural = "PDF Settings"
-
+    
+    # Content toggles for patient PDF
+    include_hospital_logo = models.BooleanField(default=True)
+    include_patient_details = models.BooleanField(default=True)
+    include_medical_records = models.BooleanField(default=True)
+    include_companion_info = models.BooleanField(default=True)
+    
+    # Medical record section toggles
+    include_basic_info = models.BooleanField(default=True)
+    include_complaint = models.BooleanField(default=True)
+    include_allergies = models.BooleanField(default=True)
+    include_medical_history = models.BooleanField(default=True)
+    include_physical_exam = models.BooleanField(default=True)
+    include_diagnosis = models.BooleanField(default=True)
+    
     def __str__(self):
-        return f"PDF Settings – {self.hospital.name}"
+        return f"PDF Settings for {self.hospital.name}"
 
 class Immunization(models.Model):
     patient   = models.ForeignKey(Patient, on_delete=models.CASCADE)
@@ -769,7 +791,7 @@ class PharmacyRequest(models.Model):
     created_at    = models.DateTimeField(auto_now_add=True)
 
     def get_scan_url(self):
-        return reverse('pharmacy:request_scan', args=[str(self.token)])
+        return reverse('manager:pharmacy_request_scan', args=[str(self.token)])
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -801,7 +823,7 @@ class PrescriptionRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_scan_url(self):
-        return reverse('manager:request_scan', args=[str(self.token)])
+        return reverse('manager:pharmacy_request_scan', args=[str(self.token)])
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

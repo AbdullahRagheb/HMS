@@ -75,6 +75,7 @@ from .models import (
 
 from superadmin.models import Hospital
 from hr.models import CustomUser
+from laboratory.models import LabRequest
 from general import models  # used by a couple of list‑view filters
 
 class HospitalmanagerRequiredMixin(UserPassesTestMixin):
@@ -155,12 +156,14 @@ class PatientDetailView(LoginRequiredMixin, HospitalmanagerRequiredMixin, Detail
         context = super().get_context_data(**kwargs)
         patient = self.object
 
+        # Ensure medical_records are ordered by newest first
         context.update({
             "admissions":         Admission.objects.filter(patient=patient),
-            "medical_records":    MedicalRecord.objects.filter(patient=patient),
+            "medical_records":    MedicalRecord.objects.filter(patient=patient).order_by('-created_at'),
             "appointments":       Appointment.objects.filter(patient=patient),
             "visits":             Visit.objects.filter(patient=patient),
             "test_orders":        TestOrder.objects.filter(patient=patient),
+            "lab_requests":       LabRequest.objects.filter(patient=patient),
             "test_results":       TestResult.objects.filter(test_order__patient=patient),
             "samples":            Sample.objects.filter(test_order__patient=patient),
             "diagnoses":          Diagnosis.objects.filter(patient=patient),
@@ -527,30 +530,31 @@ def admission_print(request, admission_id):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Check primary font path
-    font_path = '/Users/ye/Downloads/HMS/Janna LT Bold.ttf'
-    # Alternative paths - check in order
-    alt_paths = [
+    # Use a robust approach to find and register the Arabic font
+    font_paths = [
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Janna LT Bold.ttf'),  # Preferred location
         os.path.join(settings.BASE_DIR, 'Janna LT Bold.ttf'),
-        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')
+        '/Users/ye/Downloads/HMS/static/fonts/Janna LT Bold.ttf',
+        '/Users/ye/Downloads/HMS/Janna LT Bold.ttf',
     ]
     
-    # Try the primary path first
-    if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('Arabic', font_path))
-    else:
-        # Try alternative paths
-        font_registered = False
-        for alt_path in alt_paths:
-            if os.path.exists(alt_path):
-                pdfmetrics.registerFont(TTFont('Arabic', alt_path))
+    font_registered = False
+    for font_path in font_paths:
+        if os.path.exists(font_path):
+            try:
+                pdfmetrics.registerFont(TTFont('Arabic', font_path))
                 font_registered = True
                 break
-        
-        # If no font found, use a default font
-        if not font_registered:
-            # Use a standard font if Arabic font is not available
+            except Exception as e:
+                print(f"Error registering font {font_path}: {e}")
+    
+    if not font_registered:
+        # Fallback to ReportLab's built-in fonts as a last resort
+        try:
             pdfmetrics.registerFont(TTFont('Arabic', 'Helvetica'))
+        except:
+            # If that fails too, just use the default font without registration
+            print("Using default font as fallback")
 
     def prepare_arabic_text(text):
         if not text:
@@ -990,30 +994,114 @@ def clinic_create(request):
 @login_required
 def medical_record_create(request, patient_id=None):
     patient = None
+    
     if patient_id:
         patient = get_object_or_404(Patient, id=patient_id, hospital=request.user.hospital)
+    # If no patient_id in URL but patient ID in query params, use that
+    elif request.GET.get('patient'):
+        patient = get_object_or_404(Patient, id=request.GET.get('patient'), hospital=request.user.hospital)
     
     if request.method == "POST":
         form = MedicalRecordForm(request.POST, hospital=request.user.hospital, patient=patient)
         if form.is_valid():
             medical_record = form.save(commit=False)
             medical_record.patient = patient or form.cleaned_data['patient']
-            medical_record.patient.hospital = request.user.hospital
-            medical_record.source_history = form.cleaned_data['source_history']
-            medical_record.present_at_bedside = form.cleaned_data['present_at_bedside']
-            medical_record.referral_source = form.cleaned_data['referral_source']
-            medical_record.history_limitation = form.cleaned_data['history_limitation']
-            medical_record.hpi = form.cleaned_data['hpi']
-            medical_record.ros = form.cleaned_data['ros']
-            medical_record.physical_exam = form.cleaned_data['physical_exam']
+            
+            # Make sure patient's hospital is set
+            if not medical_record.patient.hospital:
+                medical_record.patient.hospital = request.user.hospital
+                medical_record.patient.save()
+            
+            # Set all fields from the form
+            medical_record.complaint = form.cleaned_data['complaint']
+            medical_record.name = form.cleaned_data.get('name')
+            medical_record.dob = form.cleaned_data.get('dob')
+            medical_record.location = form.cleaned_data.get('location')
+            medical_record.mrn = form.cleaned_data.get('mrn')
+            medical_record.weight = form.cleaned_data.get('weight')
+            medical_record.height = form.cleaned_data.get('height')
             medical_record.bmi = form.cleaned_data.get('bmi')
+            medical_record.source_history = form.cleaned_data.get('source_history')
+            medical_record.present_at_bedside = form.cleaned_data.get('present_at_bedside')
+            medical_record.referral_source = form.cleaned_data.get('referral_source')
+            medical_record.history_limitation = form.cleaned_data.get('history_limitation')
+            
+            # Set medical history fields
+            medical_record.past_medical_history = form.cleaned_data.get('past_medical_history')
+            medical_record.allergic_history = form.cleaned_data.get('allergic_history')
+            medical_record.social_history = form.cleaned_data.get('social_history')
+            medical_record.family_history = form.cleaned_data.get('family_history')
+            medical_record.past_surgical_history = form.cleaned_data.get('past_surgical_history')
+            medical_record.medication_history = form.cleaned_data.get('medication_history')
+            medical_record.immunization_history = form.cleaned_data.get('immunization_history')
+            medical_record.nutritional_history = form.cleaned_data.get('nutritional_history')
+            medical_record.psychiatric_history = form.cleaned_data.get('psychiatric_history')
+            
+            # Set JSON fields
+            medical_record.hpi = {
+                'onset': form.cleaned_data.get('hpi_onset') or '',
+                'location': form.cleaned_data.get('hpi_location') or '',
+                'severity': form.cleaned_data.get('hpi_severity') or '',
+                'duration': form.cleaned_data.get('hpi_duration') or '',
+                'modifying_factors': form.cleaned_data.get('hpi_modifying_factors') or '',
+                'others': form.cleaned_data.get('hpi_others') or ''
+            }
+            
+            medical_record.ros = {
+                'constitutional': form.cleaned_data.get('ros_constitutional') or []
+            }
+            
+            medical_record.physical_exam = {
+                'general': form.cleaned_data.get('physical_exam_general') or []
+            }
+            
+            medical_record.medical_decision = {
+                'differential_diagnoses': form.cleaned_data.get('differential_diagnoses') or '',
+                'result_review': form.cleaned_data.get('result_review') or ''
+            }
+            
+            medical_record.interpretation = {
+                'labs': form.cleaned_data.get('interpretation_labs') or '',
+                'laboratory_results': form.cleaned_data.get('laboratory_results') or ''
+            }
+            
+            medical_record.impression_plan = {
+                'diagnosis': form.cleaned_data.get('diagnosis') or '',
+                'course': form.cleaned_data.get('course') or '',
+                'orders': form.cleaned_data.get('orders') or ''
+            }
+            
+            medical_record.professional_service = form.cleaned_data.get('professional_service')
+            medical_record.patient_education = form.cleaned_data.get('patient_education')
+            medical_record.soap_note = form.cleaned_data.get('soap_note')
+            
+            # Save the medical record
             medical_record.save()
             messages.success(request, "Medical record created successfully.")
-            return redirect('manager:patient_detail', patient_id=medical_record.patient.id)
+            return redirect('manager:patient_detail', pk=medical_record.patient.id)
     else:
-        form = MedicalRecordForm(hospital=request.user.hospital, patient=patient)
+        # Prepare initial data for the form
+        initial_data = {}
+        
+        # Pre-select the patient in the dropdown if we have a patient
+        if patient:
+            initial_data['patient'] = patient.id
+            # We can also pre-populate some basic patient info fields
+            initial_data.update({
+                'name': f"{patient.first_name} {patient.last_name}",
+                'mrn': patient.mrn,
+                'dob': patient.date_of_birth,
+                'location': patient.address
+            })
+        
+        form = MedicalRecordForm(hospital=request.user.hospital, patient=patient, initial=initial_data)
     
-    return render(request, 'medical_records/medical_record_form.html', {'form': form, 'patient': patient})
+    context = {
+        'form': form, 
+        'patient': patient,
+    }
+    
+    return render(request, 'medical_records/medical_record_form.html', context)
 
 def pdf_settings(request):
     """
@@ -1044,42 +1132,143 @@ def pdf_settings(request):
     )
 
 def medical_record_print(request):
-    if request.method != "POST":
+    """
+    Generate a PDF for a medical record. Supports both:
+    - GET requests with ?id=<record_id> (from patient detail view)
+    - POST requests with form data (from medical record form)
+    """
+    record_id = None
+    patient = None
+    record = None
+    form_data = {}
+    selected_sections = []
+    
+    # Handle both GET and POST methods
+    if request.method == "GET":
+        record_id = request.GET.get('id')
+        if record_id:
+            record = get_object_or_404(MedicalRecord, id=record_id)
+            patient = record.patient
+            
+            # Convert model instance data to dict for template rendering
+            form_data = {
+                'patient': patient.id,
+                'created_at': record.created_at.strftime('%Y-%m-%d %H:%M'),
+                'name': f"{patient.first_name} {patient.last_name}",
+                'dob': patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else '',
+                'location': patient.address or '',
+                'mrn': patient.mrn,
+                'weight': record.weight,
+                'height': record.height,
+                'bmi': record.bmi,
+                'complaint': record.complaint or '',
+                'allergies': record.allergies or '',
+                'source_history': record.source_history,
+                'present_at_bedside': record.present_at_bedside,
+                'referral_source': record.referral_source,
+                'history_limitation': record.history_limitation,
+                'past_medical_history': record.past_medical_history or '',
+                'allergic_history': record.allergic_history or '',
+                'social_history': record.social_history or '',
+                'family_history': record.family_history or '',
+                'past_surgical_history': record.past_surgical_history or '',
+                'medication_history': record.medication_history or '',
+                'immunization_history': record.immunization_history or '',
+                'nutritional_history': record.nutritional_history or '',
+                'psychiatric_history': record.psychiatric_history or '',
+            }
+            
+            # Handle JSON fields
+            if record.hpi:
+                form_data['hpi_onset'] = record.hpi.get('onset', '')
+                form_data['hpi_location'] = record.hpi.get('location', '')
+                form_data['hpi_severity'] = record.hpi.get('severity', '')
+                form_data['hpi_duration'] = record.hpi.get('duration', '')
+                form_data['hpi_modifying_factors'] = record.hpi.get('modifying_factors', '')
+                form_data['hpi_others'] = record.hpi.get('others', '')
+                
+            if record.ros:
+                form_data['ros_constitutional'] = record.ros.get('constitutional', '')
+                
+            if record.physical_exam:
+                form_data['physical_exam_general'] = record.physical_exam.get('general', '')
+                
+            if record.medical_decision:
+                form_data['differential_diagnoses'] = record.medical_decision.get('differential_diagnoses', '')
+                form_data['result_review'] = record.medical_decision.get('result_review', '')
+                
+            if record.interpretation:
+                form_data['interpretation_labs'] = record.interpretation.get('labs', '')
+                form_data['laboratory_results'] = record.interpretation.get('laboratory_results', '')
+                
+            if record.impression_plan:
+                form_data['diagnosis'] = record.impression_plan.get('diagnosis', '')
+                form_data['course'] = record.impression_plan.get('course', '')
+                form_data['orders'] = record.impression_plan.get('orders', '')
+                
+            form_data['professional_service'] = record.professional_service or ''
+            form_data['patient_education'] = record.patient_education or ''
+            form_data['soap_note'] = record.soap_note or ''
+            
+            # Default to include all available sections
+            selected_sections = [
+                'basic-info', 'admission-info', 'chief-complaints', 'hpi', 
+                'ros', 'health-status', 'physical-exam', 'medical-decision',
+                'interpretation', 'impression-plan', 'professional-service', 
+                'patient-education', 'soap-note'
+            ]
+    elif request.method == "POST":
+        form_data = json.loads(request.POST.get('form_data', '{}'))
+        selected_sections = request.POST.getlist('sections')
+        patient_id = form_data.get('patient')
+        patient = get_object_or_404(Patient, id=patient_id, hospital=request.user.hospital)
+    else:
         return HttpResponse("Invalid request method", status=405)
-
-    form_data = json.loads(request.POST.get('form_data', '{}'))
-    selected_sections = request.POST.getlist('sections')
-    patient_id = form_data.get('patient')
-    patient = get_object_or_404(Patient, id=patient_id, hospital=request.user.hospital)
+        
+    # Ensure we have a patient
+    if not patient:
+        return HttpResponse("Patient not found", status=404)
+    
+    # Get user settings for PDF (or use defaults)
+    pdf_settings, created = PDFSettings.objects.get_or_create(
+        hospital=request.user.hospital,
+        defaults={
+            'font_size': 10,
+            'include_hospital_logo': True,
+            'include_patient_details': True,
+            'table_border_color': 'grey',
+        }
+    )
 
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Check primary font path
-    font_path = '/Users/ye/Downloads/HMS/Janna LT Bold.ttf'
-    # Alternative paths - check in order
-    alt_paths = [
+    # Use a robust approach to find and register the Arabic font
+    font_paths = [
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Janna LT Bold.ttf'),  # Preferred location
         os.path.join(settings.BASE_DIR, 'Janna LT Bold.ttf'),
-        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'JannaLTBold.ttf')
+        '/Users/ye/Downloads/HMS/static/fonts/Janna LT Bold.ttf',
+        '/Users/ye/Downloads/HMS/Janna LT Bold.ttf',
     ]
     
-    # Try the primary path first
-    if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('Arabic', font_path))
-    else:
-        # Try alternative paths
-        font_registered = False
-        for alt_path in alt_paths:
-            if os.path.exists(alt_path):
-                pdfmetrics.registerFont(TTFont('Arabic', alt_path))
+    font_registered = False
+    for font_path in font_paths:
+        if os.path.exists(font_path):
+            try:
+                pdfmetrics.registerFont(TTFont('Arabic', font_path))
                 font_registered = True
                 break
-        
-        # If no font found, use a default font
-        if not font_registered:
-            # Use a standard font if Arabic font is not available
+            except Exception as e:
+                print(f"Error registering font {font_path}: {e}")
+    
+    if not font_registered:
+        # Fallback to ReportLab's built-in fonts as a last resort
+        try:
             pdfmetrics.registerFont(TTFont('Arabic', 'Helvetica'))
+        except:
+            # If that fails too, just use the default font without registration
+            print("Using default font as fallback")
 
     def prepare_arabic_text(text):
         if not text:
@@ -1087,6 +1276,14 @@ def medical_record_print(request):
         reshaped_text = arabic_reshaper.reshape(str(text))
         return get_display(reshaped_text)
 
+    # Add hospital logo if available
+    logo_y_position = 750
+    if pdf_settings.header_image and os.path.exists(pdf_settings.header_image.path):
+        logo_img = ImageReader(pdf_settings.header_image.path)
+        p.drawImage(logo_img, 450, 750, width=100, height=50)
+        logo_y_position = 700
+
+    # Add QR code
     qr = qrcode.QRCode(version=1, box_size=10, border=1)
     qr.add_data(f"Patient MRN: {patient.mrn}, Medical Record Date: {form_data.get('created_at', 'N/A')}")
     qr.make(fit=True)
@@ -1096,16 +1293,18 @@ def medical_record_print(request):
     qr_buffer.seek(0)
     qr_image = ImageReader(qr_buffer)
 
-    p.drawImage(qr_image, 50, 700, width=80, height=80)
+    p.drawImage(qr_image, 50, 750, width=80, height=80)
+    
+    # Title and hospital info
     p.setFont("Arabic", 14)
-    p.drawString(150, 750, prepare_arabic_text("سجل طبي"))
+    p.drawString(150, 780, prepare_arabic_text("سجل طبي"))
 
     p.setFont("Arabic", 10)
-    p.drawString(150, 730, prepare_arabic_text(f"اسم المستشفى: {request.user.hospital.name}"))
+    p.drawString(150, 760, prepare_arabic_text(f"اسم المستشفى: {request.user.hospital.name}"))
     address = request.user.hospital.address if hasattr(request.user.hospital, 'address') else "غير متوفر"
-    p.drawString(150, 710, prepare_arabic_text(f"العنوان: {address}"))
-    p.drawString(150, 690, prepare_arabic_text(f"رقم السجل الطبي: {patient.mrn}"))
-    p.drawString(150, 670, prepare_arabic_text(f"التاريخ: {form_data.get('created_at', 'N/A')}"))
+    p.drawString(150, 740, prepare_arabic_text(f"العنوان: {address}"))
+    p.drawString(150, 720, prepare_arabic_text(f"رقم السجل الطبي: {patient.mrn}"))
+    p.drawString(150, 700, prepare_arabic_text(f"التاريخ: {form_data.get('created_at', 'N/A')}"))
 
     y_position = 650
     section_titles = {
@@ -1127,6 +1326,13 @@ def medical_record_print(request):
     for section in selected_sections:
         if section not in section_titles:
             continue
+            
+        # Check if we need a new page
+        if y_position < 100:
+            p.showPage()
+            p.setFont("Arabic", 10)
+            y_position = 750
+            
         p.setFont("Arabic", 12)
         p.drawString(50, y_position, prepare_arabic_text(section_titles[section]))
         y_position -= 20
@@ -1144,8 +1350,8 @@ def medical_record_print(request):
             ]
             table = Table(data, colWidths=[2*inch, 4*inch])
             table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'Arabic', 10),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONT', (0, 0), (-1, -1), 'Arabic', pdf_settings.font_size),
+                ('GRID', (0, 0), (-1, -1), 1, getattr(colors, pdf_settings.table_border_color, colors.grey)),
                 ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
                 ('ALIGN', (1, 0), (1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1165,8 +1371,8 @@ def medical_record_print(request):
             ]
             table = Table(data, colWidths=[2*inch, 4*inch])
             table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'Arabic', 10),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONT', (0, 0), (-1, -1), 'Arabic', pdf_settings.font_size),
+                ('GRID', (0, 0), (-1, -1), 1, getattr(colors, pdf_settings.table_border_color, colors.grey)),
                 ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
                 ('ALIGN', (1, 0), (1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1192,8 +1398,8 @@ def medical_record_print(request):
             ]
             table = Table(data, colWidths=[2*inch, 4*inch])
             table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'Arabic', 10),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONT', (0, 0), (-1, -1), 'Arabic', pdf_settings.font_size),
+                ('GRID', (0, 0), (-1, -1), 1, getattr(colors, pdf_settings.table_border_color, colors.grey)),
                 ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
                 ('ALIGN', (1, 0), (1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1222,8 +1428,8 @@ def medical_record_print(request):
             ]
             table = Table(data, colWidths=[2*inch, 4*inch])
             table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'Arabic', 10),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONT', (0, 0), (-1, -1), 'Arabic', pdf_settings.font_size),
+                ('GRID', (0, 0), (-1, -1), 1, getattr(colors, pdf_settings.table_border_color, colors.grey)),
                 ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
                 ('ALIGN', (1, 0), (1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1245,8 +1451,8 @@ def medical_record_print(request):
             ]
             table = Table(data, colWidths=[2*inch, 4*inch])
             table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'Arabic', 10),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONT', (0, 0), (-1, -1), 'Arabic', pdf_settings.font_size),
+                ('GRID', (0, 0), (-1, -1), 1, getattr(colors, pdf_settings.table_border_color, colors.grey)),
                 ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
                 ('ALIGN', (1, 0), (1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1264,8 +1470,8 @@ def medical_record_print(request):
             ]
             table = Table(data, colWidths=[2*inch, 4*inch])
             table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'Arabic', 10),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONT', (0, 0), (-1, -1), 'Arabic', pdf_settings.font_size),
+                ('GRID', (0, 0), (-1, -1), 1, getattr(colors, pdf_settings.table_border_color, colors.grey)),
                 ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
                 ('ALIGN', (1, 0), (1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1284,8 +1490,8 @@ def medical_record_print(request):
             ]
             table = Table(data, colWidths=[2*inch, 4*inch])
             table.setStyle(TableStyle([
-                ('FONT', (0, 0), (-1, -1), 'Arabic', 10),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONT', (0, 0), (-1, -1), 'Arabic', pdf_settings.font_size),
+                ('GRID', (0, 0), (-1, -1), 1, getattr(colors, pdf_settings.table_border_color, colors.grey)),
                 ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
                 ('ALIGN', (1, 0), (1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -1308,17 +1514,23 @@ def medical_record_print(request):
             p.drawString(50, y_position, prepare_arabic_text(form_data.get('soap_note', 'غير متوفر')))
             y_position -= 20
 
+    # Add footer with doctor signature
     y_position -= 40
     p.setFont("Arabic", 10)
     p.drawString(50, y_position, prepare_arabic_text("توقيع الطبيب: ___________________"))
     p.drawString(300, y_position, prepare_arabic_text("توقيع الموظف: ___________________"))
+
+    # Add page numbers
+    p.setFont("Helvetica", 8)
+    p.drawString(width/2 - 20, 20, "Page 1")
 
     p.showPage()
     p.save()
 
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="medical_record_{patient.mrn}.pdf"'
+    record_info = record_id if record_id else patient.mrn
+    response['Content-Disposition'] = f'attachment; filename="medical_record_{record_info}.pdf"'
     return response
 
 # Appointment Views
@@ -1883,6 +2095,12 @@ except Exception as exc:            # file missing or bad format
     print(f"[ICD‑11] could not load {ICD11_PATH}: {exc}")
     _icd_df = pd.DataFrame(columns=["Code", "Title"])
 
+# Load the full ICD dataframe with all columns for detailed lookups
+try:
+    _full_icd_df = pd.read_excel(ICD11_PATH, engine="openpyxl").fillna("").astype(str)
+except Exception as exc:
+    print(f"[ICD‑11] could not load full {ICD11_PATH}: {exc}")
+    _full_icd_df = pd.DataFrame()
 
 @require_GET
 def icd11_autocomplete(request):
@@ -1923,6 +2141,29 @@ def icd11_autocomplete(request):
     ]
     return JsonResponse(suggestions, safe=False)
 
+@require_GET
+def get_icd_details(request):
+    """
+    Get complete details for an ICD-11 code.
+    GET parameter:  ?code=<icd_code>
+    Returns: JSON with all available data for the code
+    """
+    code = request.GET.get("code", "").strip().upper()
+    if not code or _full_icd_df.empty:
+        return JsonResponse({"error": "Invalid code or data not available"}, status=400)
+    
+    # Find the row with the matching code
+    mask = _full_icd_df["Code"].str.upper() == code
+    result = _full_icd_df[mask]
+    
+    if len(result) == 0:
+        return JsonResponse({"error": f"Code {code} not found"}, status=404)
+    
+    # Convert the first matching row to a dictionary
+    icd_data = result.iloc[0].to_dict()
+    
+    return JsonResponse(icd_data)
+
 # PDF and QR Code Views
 def download_patient_pdf(request, patient_id):
     if not (request.user.is_authenticated and request.user.role == 'hospital_manager'):
@@ -1939,6 +2180,28 @@ def download_patient_pdf(request, patient_id):
     doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=1*inch, bottomMargin=0.5*inch)
     styles = getSampleStyleSheet()
     elements = []
+    
+    # Use a robust approach to find and register the Arabic font
+    font_paths = [
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Janna LT Bold.ttf'),  # Preferred location
+        os.path.join(settings.BASE_DIR, 'Janna LT Bold.ttf'),
+        '/Users/ye/Downloads/HMS/static/fonts/Janna LT Bold.ttf',
+        '/Users/ye/Downloads/HMS/Janna LT Bold.ttf',
+    ]
+    
+    font_registered = False
+    for font_path in font_paths:
+        if os.path.exists(font_path):
+            try:
+                pdfmetrics.registerFont(TTFont('Arabic', font_path))
+                font_registered = True
+                break
+            except Exception as e:
+                print(f"Error registering font {font_path}: {e}")
+    
+    if not font_registered:
+        # Just proceed with default fonts since we're using SimpleDocTemplate
+        print("Using default fonts for patient PDF")
     
     if pdf_settings.header_image and os.path.exists(pdf_settings.header_image.path):
         header_img = ReportLabImage(pdf_settings.header_image.path, width=2*inch, height=0.5*inch)
@@ -2135,7 +2398,7 @@ class PrescriptionRequestCreateView(CreateView):
 
         # also pass patient so the template title works
         data['patient'] = get_object_or_404(
-            self.request.user.hospital.patients,
+            Patient.objects.filter(hospital=self.request.user.hospital),
             id=self.request.GET.get('patient')
         )
         return data
@@ -2221,6 +2484,28 @@ def pharmacy_request_pdf_download(request, pk):
     
     # Create a new PDF buffer
     buffer = io.BytesIO()
+    
+    # Use a robust approach to find and register the Arabic font
+    font_paths = [
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Janna LT Bold.ttf'),  # Preferred location
+        os.path.join(settings.BASE_DIR, 'Janna LT Bold.ttf'),
+        '/Users/ye/Downloads/HMS/static/fonts/Janna LT Bold.ttf',
+        '/Users/ye/Downloads/HMS/Janna LT Bold.ttf',
+    ]
+    
+    font_registered = False
+    for font_path in font_paths:
+        if os.path.exists(font_path):
+            try:
+                pdfmetrics.registerFont(TTFont('Arabic', font_path))
+                font_registered = True
+                break
+            except Exception as e:
+                print(f"Error registering font {font_path}: {e}")
+    
+    if not font_registered:
+        # Just proceed with default fonts since we're using SimpleDocTemplate
+        print("Using default fonts for pharmacy PDF")
     
     # Use ReportLab to create a PDF
     doc = SimpleDocTemplate(

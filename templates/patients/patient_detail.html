@@ -2,18 +2,60 @@
 {% load lab_filters %}
 {% block title %}Patient Details - {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
 {% block content %}
+<style>
+    .card-header {
+        cursor: pointer;
+    }
+    .card-body.collapsed {
+        display: none;
+    }
+    .table-container {
+        transition: all 0.3s ease;
+    }
+    .drag-handle {
+        cursor: move;
+        padding: 5px;
+        color: #6c757d;
+    }
+    .table-container.dragging {
+        opacity: 0.5;
+    }
+    .sortable-ghost {
+        background-color: #f8f9fa;
+        border: 2px dashed #007bff;
+    }
+</style>
 <div class="container my-4">
     <h2 class="mb-4 text-center">
         <i class="bi bi-person-fill me-2"></i>Patient Details: {{ patient.first_name }} {{ patient.last_name }}
     </h2>
 
-    <!-- PDF Settings Link -->
-    <div class="text-end mb-3">
-        <a href="{% url 'manager:pdf_settings' %}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-gear-fill me-2"></i>PDF Settings
-        </a>
+    <!-- Layout Controls and Settings -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="btn-group" role="group" aria-label="Layout Options">
+            <button type="button" class="btn btn-outline-primary" id="singleRowLayout">
+                <i class="bi bi-layout-three-columns"></i> Single Row
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="doubleRowLayout">
+                <i class="bi bi-layout-split"></i> Double Row
+            </button>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary btn-sm" id="expandAllTables">
+                <i class="bi bi-arrows-expand"></i> Expand All
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" id="collapseAllTables">
+                <i class="bi bi-arrows-collapse"></i> Collapse All
+            </button>
+            <a href="{% url 'manager:pdf_settings' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-gear-fill me-2"></i>PDF Settings
+            </a>
+        </div>
     </div>
 
+    <!-- Sortable Container -->
+    <div id="sortableContainer">
+    
     <!-- Patient Overview -->
     <div class="row">
         <div class="col-md-4 text-center mb-4">
@@ -89,896 +131,1197 @@
     </div>
 
     <!-- Allergies -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Allergies</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:medical_record_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Allergy</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span class="section-title">Allergies</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:medical_record_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Allergy</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Allergy</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in medical_records %}
-                    {% if record.allergies %}
-                    <tr>
-                        <td>{{ record.allergies|truncatewords:10 }}</td>
-                        <td>{{ record.created_at }}</td>
-                    </tr>
-                    {% endif %}
-                    {% empty %}
-                    <tr>
-                        <td colspan="2" class="text-center text-muted py-4">
-                            <i class="bi bi-exclamation-triangle me-2" style="font-size: 1.5rem;"></i>No allergies recorded.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Allergy</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in medical_records %}
+                        {% if record.allergies %}
+                        <tr>
+                            <td>{{ record.allergies|truncatewords:10 }}</td>
+                            <td>{{ record.created_at }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-4">
+                                <i class="bi bi-exclamation-triangle me-2" style="font-size: 1.5rem;"></i>No allergies recorded.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Conditions (Diagnoses) -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-heart-pulse-fill me-2"></i>Conditions</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:diagnosis_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Condition</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-heart-pulse-fill me-2"></i>
+                <span class="section-title">Conditions</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:diagnosis_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Condition</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Diagnosis</th>
-                        <th>ICD Code</th>
-                        <th>Date Diagnosed</th>
-                        <th>Doctor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for diagnosis in diagnoses %}
-                    <tr>
-                        <td>{{ diagnosis.name }}</td>
-                        <td>{{ diagnosis.icd_code }}</td>
-                        <td>{{ diagnosis.date_diagnosed }}</td>
-                        <td>{{ diagnosis.doctor|default:"N/A" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                            <i class="bi bi-heart-pulse me-2" style="font-size: 1.5rem;"></i>No conditions recorded.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Diagnosis</th>
+                            <th>ICD Code</th>
+                            <th>Date Diagnosed</th>
+                            <th>Doctor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for diagnosis in diagnoses %}
+                        <tr>
+                            <td>{{ diagnosis.name }}</td>
+                            <td>{{ diagnosis.icd_code }}</td>
+                            <td>{{ diagnosis.date_diagnosed }}</td>
+                            <td>{{ diagnosis.doctor|default:"N/A" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-heart-pulse me-2" style="font-size: 1.5rem;"></i>No conditions recorded.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Lab Results -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-clipboard-data-fill me-2"></i>Lab Results</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'laboratory:test_results_list' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-list-ul me-2"></i>View All Results</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-clipboard-data-fill me-2"></i>
+                <span class="section-title">Lab Results</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'laboratory:test_results_list' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-list-ul me-2"></i>View All Results</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Test</th>
-                        <th>Result</th>
-                        <th>Normal Range</th>
-                        <th>Unit</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for result in test_results %}
-                    <tr>
-                        <td>{{ result.test.english_name }}</td>
-                        <td>{{ result.result_value|format_result:result.test.normal_range|safe }}</td>
-                        <td>{{ result.test.normal_range }}</td>
-                        <td>{{ result.test.unit }}</td>
-                        <td>
-                            <a href="{% url 'laboratory:edit_test_result' result.id %}" class="btn btn-sm btn-primary">Edit</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No lab results found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Test</th>
+                            <th>Result</th>
+                            <th>Normal Range</th>
+                            <th>Unit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in test_results %}
+                        <tr>
+                            <td>{{ result.test.english_name }}</td>
+                            <td>{{ result.result_value|format_result:result.test.normal_range|safe }}</td>
+                            <td>{{ result.test.normal_range }}</td>
+                            <td>{{ result.test.unit }}</td>
+                            <td>
+                                <a href="{% url 'laboratory:edit_test_result' result.id %}" class="btn btn-sm btn-primary">Edit</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No lab results found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Lab Requests (Test Orders) -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-clipboard-check-fill me-2"></i>Lab Requests</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'laboratory:testorder_add' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-2"></i>Add Lab Request</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-clipboard-check-fill me-2"></i>
+                <span class="section-title">Lab Requests</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'laboratory:testorder_add' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-2"></i>Add Lab Request</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Date</th>
-                        <th>Tests</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in test_orders %}
-                    <tr>
-                        <td>#{{ order.id }}</td>
-                        <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            <ul>
-                                {% for test in order.tests.all %}
-                                <li>{{ test.english_name }} - <small class="text-muted">{{ test.main_category }}</small></li>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Tests</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in test_orders %}
+                        <tr>
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <ul>
+                                    {% for test in order.tests.all %}
+                                    <li>{{ test.english_name }} - <small class="text-muted">{{ test.main_category }}</small></li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>{{ order.status }}</td>
+                            <td>
+                                <a href="{% url 'laboratory:testorder_update' order.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="{% url 'laboratory:testorder_delete' order.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                <a href="{% url 'laboratory:add_test_result' order.id %}" class="btn btn-sm btn-success">Enter Results</a>
+                                <a href="{% url 'laboratory:testorder_print' order.pk %}" class="btn btn-sm btn-info" target="_blank">Print</a>
+                                {% for sample in order.samples.all %}
+                                <a href="{% url 'laboratory:sample_barcode_print' sample.id %}" class="btn btn-sm btn-secondary" target="_blank">Print Barcode</a>
+                                {% empty %}
+                                <span class="text-danger">No Sample</span>
                                 {% endfor %}
-                            </ul>
-                        </td>
-                        <td>{{ order.status }}</td>
-                        <td>
-                            <a href="{% url 'laboratory:testorder_update' order.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="{% url 'laboratory:testorder_delete' order.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                            <a href="{% url 'laboratory:add_test_result' order.id %}" class="btn btn-sm btn-success">Enter Results</a>
-                            <a href="{% url 'laboratory:testorder_print' order.pk %}" class="btn btn-sm btn-info" target="_blank">Print</a>
-                            {% for sample in order.samples.all %}
-                            <a href="{% url 'laboratory:sample_barcode_print' sample.id %}" class="btn btn-sm btn-secondary" target="_blank">Print Barcode</a>
-                            {% empty %}
-                            <span class="text-danger">No Sample</span>
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No lab requests found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        {% for request in lab_requests %}
+                        <tr>
+                            <td>#{{ request.id }} (Lab Request)</td>
+                            <td>{{ request.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if request.group %}
+                                <strong>Group:</strong> {{ request.group.name }}<br>
+                                {% endif %}
+                                <ul>
+                                    {% for test in request.tests.all %}
+                                    <li>{{ test.english_name }} - <small class="text-muted">{{ test.main_category }}</small></li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                {% if request.status == 'submitted' %}
+                                <span class="badge bg-info">{{ request.get_status_display }}</span>
+                                {% elif request.status == 'accepted' %}
+                                <span class="badge bg-warning">{{ request.get_status_display }}</span>
+                                {% elif request.status == 'collected' %}
+                                <span class="badge bg-primary">{{ request.get_status_display }}</span>
+                                {% elif request.status == 'completed' %}
+                                <span class="badge bg-success">{{ request.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'laboratory:lab_request_detail' request.pk %}" class="btn btn-sm btn-primary">View</a>
+                                {% if request.qr_code %}
+                                <a href="{{ request.qr_code.url }}" class="btn btn-sm btn-secondary" target="_blank">QR Code</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        {% if not test_orders and not lab_requests %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No lab requests found.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Lab Orders Fulfillment -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-check-circle-fill me-2"></i>Lab Orders Fulfillment</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Sample ID</th>
-                        <th>Tube Type</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sample in samples %}
-                    <tr>
-                        <td>#{{ sample.test_order.id }}</td>
-                        <td>{{ sample.id }}</td>
-                        <td>{{ sample.tube_type }}</td>
-                        <td>{{ sample.test_order.status }}</td>
-                        <td>
-                            <a href="{% url 'laboratory:sample_barcode_print' sample.id %}" class="btn btn-sm btn-secondary" target="_blank">Print Barcode</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No samples found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span class="section-title">Lab Orders Fulfillment</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Sample ID</th>
+                            <th>Tube Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sample in samples %}
+                        <tr>
+                            <td>#{{ sample.test_order.id }}</td>
+                            <td>{{ sample.id }}</td>
+                            <td>{{ sample.tube_type }}</td>
+                            <td>{{ sample.test_order.status }}</td>
+                            <td>
+                                <a href="{% url 'laboratory:sample_barcode_print' sample.id %}" class="btn btn-sm btn-secondary" target="_blank">Print Barcode</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No samples found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- History and Examinations -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-file-medical-fill me-2"></i>History and Examinations</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:medical_record_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Medical Record</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-file-medical-fill me-2"></i>
+                <span class="section-title">History and Examinations</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:medical_record_create' %}?patient={{ patient.id }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Add Medical Record
+                </a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Date</th>
-                        <th>Clinical Examination</th>
-                        <th>HPI</th>
-                        <th>ROS</th>
-                        <th>Physical Exam</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in medical_records %}
-                    <tr>
-                        <td>{{ record.created_at }}</td>
-                        <td>{{ record.clinical_examination|default:"N/A"|truncatewords:10 }}</td>
-                        <td>{{ record.hpi|default:"N/A"|truncatewords:10 }}</td>
-                        <td>{{ record.ros|default:"N/A"|truncatewords:10 }}</td>
-                        <td>{{ record.physical_exam|default:"N/A"|truncatewords:10 }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="bi bi-file-earmark-x me-2" style="font-size: 1.5rem;"></i>No examinations recorded.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <!-- Latest Medical Record Summary (if exists) -->
+            {% if medical_records.first %}
+            {% with latest=medical_records.first %}
+            <div class="alert alert-info mb-4">
+                <h5 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Latest Medical Record Summary ({{ latest.created_at|date:"Y-m-d H:i" }})</h5>
+                <hr>
+                <div class="row">
+                    {% if latest.complaint %}
+                    <div class="col-md-4 mb-2">
+                        <strong>Chief Complaint:</strong><br>
+                        {{ latest.complaint|truncatewords:15 }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if latest.allergies %}
+                    <div class="col-md-4 mb-2">
+                        <strong>Allergies:</strong><br>
+                        {{ latest.allergies|truncatewords:15 }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if latest.weight or latest.height or latest.bmi %}
+                    <div class="col-md-4 mb-2">
+                        <strong>Vitals:</strong><br>
+                        {% if latest.weight %}Weight: {{ latest.weight }} kg{% endif %}
+                        {% if latest.height %}Height: {{ latest.height }} cm{% endif %}
+                        {% if latest.bmi %}BMI: {{ latest.bmi }}{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endif %}
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Date</th>
+                            <th>Complaint</th>
+                            <th>Allergies</th>
+                            <th>HPI</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in medical_records %}
+                        <tr>
+                            <td>{{ record.created_at }}</td>
+                            <td>{{ record.complaint|default:"N/A"|truncatewords:10 }}</td>
+                            <td>{{ record.allergies|default:"N/A"|truncatewords:10 }}</td>
+                            <td>
+                                {% if record.hpi %}
+                                    {% if record.hpi.onset %}Onset: {{ record.hpi.onset|truncatewords:5 }}{% endif %}
+                                    {% if record.hpi.location %}<br>Location: {{ record.hpi.location|truncatewords:5 }}{% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'manager:medical_record_print' %}?id={{ record.id }}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-printer"></i> Print
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-file-earmark-x me-2" style="font-size: 1.5rem;"></i>No examinations recorded.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Vitals Flow Sheet -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-heart-fill me-2"></i>Vitals Flow Sheet</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:vitals_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Vitals</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-heart-fill me-2"></i>
+                <span class="section-title">Vitals Flow Sheet</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:vitals_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Vitals</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Date</th>
-                        <th>Weight (kg)</th>
-                        <th>Height (cm)</th>
-                        <th>BMI</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in medical_records %}
-                    {% if record.weight or record.height or record.bmi %}
-                    <tr>
-                        <td>{{ record.created_at }}</td>
-                        <td>{{ record.weight|default:"N/A" }}</td>
-                        <td>{{ record.height|default:"N/A" }}</td>
-                        <td>{{ record.bmi|default:"N/A" }}</td>
-                    </tr>
-                    {% endif %}
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                            <i class="bi bi-heart me-2" style="font-size: 1.5rem;"></i>No vitals recorded.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Date</th>
+                            <th>Weight (kg)</th>
+                            <th>Height (cm)</th>
+                            <th>BMI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in medical_records %}
+                        {% if record.weight or record.height or record.bmi %}
+                        <tr>
+                            <td>{{ record.created_at }}</td>
+                            <td>{{ record.weight|default:"N/A" }}</td>
+                            <td>{{ record.height|default:"N/A" }}</td>
+                            <td>{{ record.bmi|default:"N/A" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-heart me-2" style="font-size: 1.5rem;"></i>No vitals recorded.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Radiology Orders -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-x-ray me-2"></i>Radiology Orders</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:radiology_order_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Radiology Order</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-x-ray me-2"></i>
+                <span class="section-title">Radiology Orders</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:radiology_order_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Radiology Order</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Order Date</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in radiology_orders %}
-                    <tr>
-                        <td>{{ order.order_date }}</td>
-                        <td>{{ order.radiology_type }}</td>
-                        <td>{{ order.status }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-x-ray me-2" style="font-size: 1.5rem;"></i>No radiology orders found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Order Date</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in radiology_orders %}
+                        <tr>
+                            <td>{{ order.order_date }}</td>
+                            <td>{{ order.radiology_type }}</td>
+                            <td>{{ order.status }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-x-ray me-2" style="font-size: 1.5rem;"></i>No radiology orders found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Disposition -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-box-arrow-right me-2"></i>Disposition</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Admission</th>
-                        <th>Discharge Date</th>
-                        <th>Discharge Report</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for admission in admissions %}
-                    {% if admission.discharge_date %}
-                    <tr>
-                        <td>{{ admission.admission_date }}</td>
-                        <td>{{ admission.discharge_date }}</td>
-                        <td>{{ admission.discharge_report|default:"N/A"|truncatewords:10 }}</td>
-                    </tr>
-                    {% endif %}
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-box-arrow-right me-2" style="font-size: 1.5rem;"></i>No dispositions recorded.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-box-arrow-right me-2"></i>
+                <span class="section-title">Disposition</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Admission</th>
+                            <th>Discharge Date</th>
+                            <th>Discharge Report</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admission in admissions %}
+                        {% if admission.discharge_date %}
+                        <tr>
+                            <td>{{ admission.admission_date }}</td>
+                            <td>{{ admission.discharge_date }}</td>
+                            <td>{{ admission.discharge_report|default:"N/A"|truncatewords:10 }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-box-arrow-right me-2" style="font-size: 1.5rem;"></i>No dispositions recorded.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Admission Details -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-hospital-fill me-2"></i>Admission Details</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Admission Date</th>
-                        <th>Type</th>
-                        <th>Department</th>
-                        <th>Bed</th>
-                        <th>Treating Doctor</th>
-                        <th>Reason</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for admission in admissions %}
-                    <tr>
-                        <td>{{ admission.admission_date }}</td>
-                        <td>{{ admission.admission_type }}</td>
-                        <td>{{ admission.department|default:"N/A" }}</td>
-                        <td>{{ admission.bed|default:"N/A" }}</td>
-                        <td>{{ admission.treating_doctor|default:"N/A" }}</td>
-                        <td>{{ admission.reason_for_admission|default:"N/A"|truncatewords:10 }}</td>
-                        <td>
-                            <a href="{% url 'manager:discharge_admission' admission.id %}" class="btn btn-sm btn-warning me-1"><i class="bi bi-box-arrow-right"></i> Discharge</a>
-                            <a href="{% url 'manager:transfer_create' admission.id %}" class="btn btn-sm btn-info"><i class="bi bi-arrow-left-right"></i> Transfer</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No admissions found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-hospital-fill me-2"></i>
+                <span class="section-title">Admission Details</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Admission Date</th>
+                            <th>Type</th>
+                            <th>Department</th>
+                            <th>Bed</th>
+                            <th>Treating Doctor</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admission in admissions %}
+                        <tr>
+                            <td>{{ admission.admission_date }}</td>
+                            <td>{{ admission.admission_type }}</td>
+                            <td>{{ admission.department|default:"N/A" }}</td>
+                            <td>{{ admission.bed|default:"N/A" }}</td>
+                            <td>{{ admission.treating_doctor|default:"N/A" }}</td>
+                            <td>{{ admission.reason_for_admission|default:"N/A"|truncatewords:10 }}</td>
+                            <td>
+                                <a href="{% url 'manager:discharge_admission' admission.id %}" class="btn btn-sm btn-warning me-1"><i class="bi bi-box-arrow-right"></i> Discharge</a>
+                                <a href="{% url 'manager:transfer_create' admission.id %}" class="btn btn-sm btn-info"><i class="bi bi-arrow-left-right"></i> Transfer</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No admissions found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Bacteriology Results -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-bug-fill me-2"></i>Bacteriology Results</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Test</th>
-                        <th>Result</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for result in bacteriology_results %}
-                    <tr>
-                        <td>{{ result.test_name }}</td>
-                        <td>{{ result.result }}</td>
-                        <td>{{ result.test_date }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-bug me-2" style="font-size: 1.5rem;"></i>No bacteriology results found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-bug-fill me-2"></i>
+                <span class="section-title">Bacteriology Results</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Test</th>
+                            <th>Result</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in bacteriology_results %}
+                        <tr>
+                            <td>{{ result.test_name }}</td>
+                            <td>{{ result.result }}</td>
+                            <td>{{ result.test_date }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-bug me-2" style="font-size: 1.5rem;"></i>No bacteriology results found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
+    
     <!-- Forms-2 ObsToObs -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-file-text-fill me-2"></i>Forms-2 ObsToObs</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:obstoobs_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Form</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-file-text-fill me-2"></i>
+                <span class="section-title">Forms-2 ObsToObs</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:obstoobs_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Form</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Form Name</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for form in obstoobs_forms %}
-                    <tr>
-                        <td>{{ form.name }}</td>
-                        <td>{{ form.created_at }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2" class="text-center text-muted py-4">
-                            <i class="bi bi-file-text me-2" style="font-size: 1.5rem;"></i>No ObsToObs forms found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Form Name</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in obstoobs_forms %}
+                        <tr>
+                            <td>{{ form.name }}</td>
+                            <td>{{ form.created_at }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-4">
+                                <i class="bi bi-file-text me-2" style="font-size: 1.5rem;"></i>No ObsToObs forms found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Diagnoses -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-clipboard-pulse me-2"></i>Diagnoses</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:diagnosis_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Diagnosis</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-clipboard-pulse me-2"></i>
+                <span class="section-title">Diagnoses</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:diagnosis_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Diagnosis</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Name</th>
-                        <th>ICD Code</th>
-                        <th>Date Diagnosed</th>
-                        <th>Doctor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for diagnosis in diagnoses %}
-                    <tr>
-                        <td>{{ diagnosis.name }}</td>
-                        <td>{{ diagnosis.icd_code }}</td>
-                        <td>{{ diagnosis.date_diagnosed }}</td>
-                        <td>{{ diagnosis.doctor|default:"N/A" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard-pulse me-2" style="font-size: 1.5rem;"></i>No diagnoses found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Name</th>
+                            <th>ICD Code</th>
+                            <th>Date Diagnosed</th>
+                            <th>Doctor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for diagnosis in diagnoses %}
+                        <tr>
+                            <td>{{ diagnosis.name }}</td>
+                            <td>{{ diagnosis.icd_code }}</td>
+                            <td>{{ diagnosis.date_diagnosed }}</td>
+                            <td>{{ diagnosis.doctor|default:"N/A" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard-pulse me-2" style="font-size: 1.5rem;"></i>No diagnoses found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Treatments (Prescriptions) -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-capsule me-2"></i>Treatments</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:prescription_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Treatment</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-capsule me-2"></i>
+                <span class="section-title">Treatments</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:prescription_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Treatment</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Medication</th>
-                        <th>Dosage</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Doctor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for prescription in prescriptions %}
-                    <tr>
-                        <td>{{ prescription.medication.name }}</td>
-                        <td>{{ prescription.dosage }}</td>
-                        <td>{{ prescription.start_date }}</td>
-                        <td>{{ prescription.end_date|default:"N/A" }}</td>
-                        <td>{{ prescription.doctor|default:"N/A" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="bi bi-capsule me-2" style="font-size: 1.5rem;"></i>No treatments found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Medication</th>
+                            <th>Dosage</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Doctor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prescription in prescriptions %}
+                        <tr>
+                            <td>{{ prescription.medication.name }}</td>
+                            <td>{{ prescription.dosage }}</td>
+                            <td>{{ prescription.start_date }}</td>
+                            <td>{{ prescription.end_date|default:"N/A" }}</td>
+                            <td>{{ prescription.doctor|default:"N/A" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-capsule me-2" style="font-size: 1.5rem;"></i>No treatments found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Pharmacy Requests -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-shop-window me-2"></i>Pharmacy Requests</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:pharmacy_request_new' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>New Pharmacy Request</a>
-            <a href="{% url 'manager:pharmacy_request_list' %}" class="btn btn-info btn-sm"><i class="bi bi-list-ul me-2"></i>View All Requests</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-shop-window me-2"></i>
+                <span class="section-title">Pharmacy Requests</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:pharmacy_request_new' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>New Pharmacy Request</a>
+                <a href="{% url 'manager:pharmacy_request_list' %}" class="btn btn-info btn-sm"><i class="bi bi-list-ul me-2"></i>View All Requests</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Request Date</th>
-                        <th>Status</th>
-                        <th>Medications</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for request in patient.prescription_requests.all %}
-                    <tr>
-                        <td>{{ request.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            {% if request.status == 'submitted' %}
-                                <span class="badge bg-info">{{ request.get_status_display }}</span>
-                            {% elif request.status == 'accepted' %}
-                                <span class="badge bg-warning">{{ request.get_status_display }}</span>
-                            {% elif request.status == 'ready' %}
-                                <span class="badge bg-success">{{ request.get_status_display }}</span>
-                            {% elif request.status == 'dispensed' %}
-                                <span class="badge bg-secondary">{{ request.get_status_display }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <ul class="mb-0 ps-3">
-                                {% for item in request.items.all %}
-                                <li>{{ item.medication.name }} - {{ item.dosage }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                        <td>
-                            <a href="{% url 'manager:pharmacy_request_detail' request.pk %}" class="btn btn-sm btn-info">
-                                <i class="bi bi-eye me-1"></i>View
-                            </a>
-                            <a href="{% url 'manager:pharmacy_request_pdf' request.pk %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-file-pdf me-1"></i>PDF
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                            <i class="bi bi-shop me-2" style="font-size: 1.5rem;"></i>No pharmacy requests found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Request Date</th>
+                            <th>Status</th>
+                            <th>Medications</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in patient.prescription_requests.all %}
+                        <tr>
+                            <td>{{ request.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if request.status == 'submitted' %}
+                                    <span class="badge bg-info">{{ request.get_status_display }}</span>
+                                {% elif request.status == 'accepted' %}
+                                    <span class="badge bg-warning">{{ request.get_status_display }}</span>
+                                {% elif request.status == 'ready' %}
+                                    <span class="badge bg-success">{{ request.get_status_display }}</span>
+                                {% elif request.status == 'dispensed' %}
+                                    <span class="badge bg-secondary">{{ request.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <ul class="mb-0 ps-3">
+                                    {% for item in request.items.all %}
+                                    <li>{{ item.medication.name }} - {{ item.dosage }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                <a href="{% url 'manager:pharmacy_request_detail' request.pk %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                                <a href="{% url 'manager:pharmacy_request_pdf' request.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-file-pdf me-1"></i>PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-shop me-2" style="font-size: 1.5rem;"></i>No pharmacy requests found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Radiology -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-x-ray me-2"></i>Radiology</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Test</th>
-                        <th>Result</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for result in radiology_results %}
-                    <tr>
-                        <td>{{ result.test_name }}</td>
-                        <td>{{ result.result|truncatewords:10 }}</td>
-                        <td>{{ result.test_date }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-x-ray me-2" style="font-size: 1.5rem;"></i>No radiology results found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-x-ray me-2"></i>
+                <span class="section-title">Radiology</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Test</th>
+                            <th>Result</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in radiology_results %}
+                        <tr>
+                            <td>{{ result.test_name }}</td>
+                            <td>{{ result.result|truncatewords:10 }}</td>
+                            <td>{{ result.test_date }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-x-ray me-2" style="font-size: 1.5rem;"></i>No radiology results found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Immunizations -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-syringe me-2"></i>Immunizations</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:immunization_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Immunization</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-syringe me-2"></i>
+                <span class="section-title">Immunizations</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:immunization_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Immunization</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Vaccine</th>
-                        <th>Date</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in medical_records %}
-                    {% if record.immunization_history %}
-                    <tr>
-                        <td>{{ record.immunization_history|truncatewords:10 }}</td>
-                        <td>{{ record.created_at }}</td>
-                        <td>{{ record.notes|default:"N/A"|truncatewords:10 }}</td>
-                    </tr>
-                    {% endif %}
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-syringe me-2" style="font-size: 1.5rem;"></i>No immunizations recorded.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Vaccine</th>
+                            <th>Date</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in medical_records %}
+                        {% if record.immunization_history %}
+                        <tr>
+                            <td>{{ record.immunization_history|truncatewords:10 }}</td>
+                            <td>{{ record.created_at }}</td>
+                            <td>{{ record.notes|default:"N/A"|truncatewords:10 }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-syringe me-2" style="font-size: 1.5rem;"></i>No immunizations recorded.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- PACS -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-image-fill me-2"></i>PACS</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Image Type</th>
-                        <th>Date</th>
-                        <th>Link</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pacs in pacs_records %}
-                    <tr>
-                        <td>{{ pacs.image_type }}</td>
-                        <td>{{ pacs.created_at }}</td>
-                        <td><a href="{{ pacs.image_url }}" target="_blank">View Image</a></td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-image me-2" style="font-size: 1.5rem;"></i>No PACS records found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-image-fill me-2"></i>
+                <span class="section-title">PACS</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Image Type</th>
+                            <th>Date</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pacs in pacs_records %}
+                        <tr>
+                            <td>{{ pacs.image_type }}</td>
+                            <td>{{ pacs.created_at }}</td>
+                            <td><a href="{{ pacs.image_url }}" target="_blank">View Image</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-image me-2" style="font-size: 1.5rem;"></i>No PACS records found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Programs -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-clipboard2-pulse-fill me-2"></i>Programs</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:program_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Program</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-clipboard2-pulse-fill me-2"></i>
+                <span class="section-title">Programs</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:program_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Program</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Program Name</th>
-                        <th>Start Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for program in programs %}
-                    <tr>
-                        <td>{{ program.name }}</td>
-                        <td>{{ program.start_date }}</td>
-                        <td>{{ program.status }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard2-pulse me-2" style="font-size: 1.5rem;"></i>No programs enrolled.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Program Name</th>
+                            <th>Start Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for program in programs %}
+                        <tr>
+                            <td>{{ program.name }}</td>
+                            <td>{{ program.start_date }}</td>
+                            <td>{{ program.status }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard2-pulse me-2" style="font-size: 1.5rem;"></i>No programs enrolled.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Forms -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-file-text-fill me-2"></i>Forms</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:form_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Form</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-file-text-fill me-2"></i>
+                <span class="section-title">Forms</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:form_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Form</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Form Name</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for form in forms %}
-                    <tr>
-                        <td>{{ form.name }}</td>
-                        <td>{{ form.created_at }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2" class="text-center text-muted py-4">
-                            <i class="bi bi-file-text me-2" style="font-size: 1.5rem;"></i>No forms found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Form Name</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in forms %}
+                        <tr>
+                            <td>{{ form.name }}</td>
+                            <td>{{ form.created_at }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-4">
+                                <i class="bi bi-file-text me-2" style="font-size: 1.5rem;"></i>No forms found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Observation Forms -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-file-text-fill me-2"></i>Observation Forms</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:observation_form_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Observation Form</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-file-text-fill me-2"></i>
+                <span class="section-title">Observation Forms</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:observation_form_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Observation Form</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Form Name</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for form in observation_forms %}
-                    <tr>
-                        <td>{{ form.name }}</td>
-                        <td>{{ form.created_at }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2" class="text-center text-muted py-4">
-                            <i class="bi bi-file-text me-2" style="font-size: 1.5rem;"></i>No observation forms found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Form Name</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in observation_forms %}
+                        <tr>
+                            <td>{{ form.name }}</td>
+                            <td>{{ form.created_at }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-4">
+                                <i class="bi bi-file-text me-2" style="font-size: 1.5rem;"></i>No observation forms found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Appointments -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-calendar-check-fill me-2"></i>Appointments</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:appointment_create' %}?patient={{ patient.id }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle-fill me-2"></i>Schedule Appointment
-            </a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-calendar-check-fill me-2"></i>
+                <span class="section-title">Appointments</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:appointment_create' %}?patient={{ patient.id }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Schedule Appointment
+                </a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Clinic</th>
-                        <th>Date/Time</th>
-                        <th>Type</th>
-                        <th>Doctor</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for appointment in appointments %}
-                    <tr>
-                        <td>{{ appointment.clinic|default:"N/A" }}</td>
-                        <td>{{ appointment.date_time }}</td>
-                        <td>{{ appointment.appointment_type }}</td>
-                        <td>{{ appointment.doctor|default:"N/A" }}</td>
-                        <td>{{ appointment.status }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="bi bi-calendar-x me-2" style="font-size: 1.5rem;"></i>No appointments found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Clinic</th>
+                            <th>Date/Time</th>
+                            <th>Type</th>
+                            <th>Doctor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr>
+                            <td>{{ appointment.clinic|default:"N/A" }}</td>
+                            <td>{{ appointment.date_time }}</td>
+                            <td>{{ appointment.appointment_type }}</td>
+                            <td>{{ appointment.doctor|default:"N/A" }}</td>
+                            <td>{{ appointment.status }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-x me-2" style="font-size: 1.5rem;"></i>No appointments found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Procedures -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-scissors me-2"></i>Procedures</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:procedure_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Procedure</a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-scissors me-2"></i>
+                <span class="section-title">Procedures</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:procedure_create' %}?patient={{ patient.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-2"></i>Add Procedure</a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Procedure</th>
-                        <th>Date</th>
-                        <th>Doctor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for procedure in procedures %}
-                    <tr>
-                        <td>{{ procedure.name }}</td>
-                        <td>{{ procedure.date }}</td>
-                        <td>{{ procedure.doctor|default:"N/A" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            <i class="bi bi-scissors me-2" style="font-size: 1.5rem;"></i>No procedures found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Procedure</th>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for procedure in procedures %}
+                        <tr>
+                            <td>{{ procedure.name }}</td>
+                            <td>{{ procedure.date }}</td>
+                            <td>{{ procedure.doctor|default:"N/A" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="bi bi-scissors me-2" style="font-size: 1.5rem;"></i>No procedures found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Visits -->
-    <div class="card mb-4 p-4">
-        <h4 class="mb-3"><i class="bi bi-clipboard-fill me-2"></i>Visits</h4>
-        <div class="text-end mb-3">
-            <a href="{% url 'manager:visit_create' %}?patient={{ patient.id }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle-fill me-2"></i>Add Visit
-            </a>
+    <div class="table-container card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+                <i class="bi bi-clipboard-fill me-2"></i>
+                <span class="section-title">Visits</span>
+                <i class="bi bi-chevron-down toggle-icon"></i>
+            </div>
+            <div>
+                <a href="{% url 'manager:visit_create' %}?patient={{ patient.id }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Add Visit
+                </a>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Visit Type</th>
-                        <th>Department</th>
-                        <th>Doctor</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for visit in visits %}
-                    <tr>
-                        <td>{{ visit.visit_type }}</td>
-                        <td>{{ visit.department }}</td>
-                        <td>{{ visit.doctor|default:"N/A" }}</td>
-                        <td>{{ visit.notes|default:"N/A"|truncatewords:10 }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No visits found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Visit Type</th>
+                            <th>Department</th>
+                            <th>Doctor</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visit in visits %}
+                        <tr>
+                            <td>{{ visit.visit_type }}</td>
+                            <td>{{ visit.department }}</td>
+                            <td>{{ visit.doctor|default:"N/A" }}</td>
+                            <td>{{ visit.notes|default:"N/A"|truncatewords:10 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard-x me-2" style="font-size: 1.5rem;"></i>No visits found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
+    
+    </div> <!-- End of sortable container -->
+    
     <!-- Back Button -->
     <div class="text-center mt-4">
         <a href="{% url 'manager:patient_list' %}" class="btn btn-secondary">
@@ -986,4 +1329,150 @@
         </a>
     </div>
 </div>
+
+<!-- JavaScript for folding, layout control, and drag-and-drop sorting -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up folding functionality
+        const cardHeaders = document.querySelectorAll('.card-header');
+        cardHeaders.forEach(header => {
+            header.addEventListener('click', function(e) {
+                // Prevent click from triggering when clicking on buttons in the header
+                if (e.target.closest('a') || e.target.closest('button')) {
+                    return;
+                }
+                
+                const cardBody = this.nextElementSibling;
+                const toggleIcon = this.querySelector('.toggle-icon');
+                
+                cardBody.classList.toggle('collapsed');
+                
+                if (cardBody.classList.contains('collapsed')) {
+                    toggleIcon.classList.remove('bi-chevron-down');
+                    toggleIcon.classList.add('bi-chevron-right');
+                } else {
+                    toggleIcon.classList.remove('bi-chevron-right');
+                    toggleIcon.classList.add('bi-chevron-down');
+                }
+            });
+        });
+        
+        // Set up expand/collapse all buttons
+        document.getElementById('expandAllTables').addEventListener('click', function() {
+            document.querySelectorAll('.card-body').forEach(body => {
+                body.classList.remove('collapsed');
+            });
+            document.querySelectorAll('.toggle-icon').forEach(icon => {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-down');
+            });
+        });
+        
+        document.getElementById('collapseAllTables').addEventListener('click', function() {
+            document.querySelectorAll('.card-body').forEach(body => {
+                body.classList.add('collapsed');
+            });
+            document.querySelectorAll('.toggle-icon').forEach(icon => {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-right');
+            });
+        });
+        
+        // Layout control buttons
+        document.getElementById('singleRowLayout').addEventListener('click', function() {
+            const sortableContainer = document.getElementById('sortableContainer');
+            sortableContainer.classList.remove('row');
+            
+            document.querySelectorAll('.table-container').forEach(container => {
+                container.classList.remove('col-md-6');
+                container.classList.add('col-md-12');
+            });
+            localStorage.setItem('patientDetailLayout', 'single');
+            
+            // Update active button state
+            this.classList.add('active');
+            document.getElementById('doubleRowLayout').classList.remove('active');
+        });
+        
+        document.getElementById('doubleRowLayout').addEventListener('click', function() {
+            const sortableContainer = document.getElementById('sortableContainer');
+            sortableContainer.classList.add('row');
+            
+            document.querySelectorAll('.table-container').forEach(container => {
+                container.classList.remove('col-md-12');
+                container.classList.add('col-md-6');
+            });
+            localStorage.setItem('patientDetailLayout', 'double');
+            
+            // Update active button state
+            this.classList.add('active');
+            document.getElementById('singleRowLayout').classList.remove('active');
+        });
+        
+        // Initialize Sortable.js
+        const sortable = new Sortable(document.getElementById('sortableContainer'), {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            onStart: function(evt) {
+                evt.item.classList.add('dragging');
+            },
+            onEnd: function(evt) {
+                evt.item.classList.remove('dragging');
+                // Save the order to localStorage
+                const order = Array.from(document.querySelectorAll('.table-container')).map(container => {
+                    return container.querySelector('.section-title').textContent.trim();
+                });
+                localStorage.setItem('patientDetailOrder', JSON.stringify(order));
+            }
+        });
+        
+        // Restore layout preference
+        const savedLayout = localStorage.getItem('patientDetailLayout');
+        if (savedLayout === 'double') {
+            document.getElementById('doubleRowLayout').click();
+        } else {
+            document.getElementById('singleRowLayout').click();
+        }
+        
+        // Restore order if available
+        const savedOrder = localStorage.getItem('patientDetailOrder');
+        if (savedOrder) {
+            try {
+                const order = JSON.parse(savedOrder);
+                const container = document.getElementById('sortableContainer');
+                const elements = Array.from(document.querySelectorAll('.table-container'));
+                
+                // Sort the elements according to the saved order
+                elements.sort((a, b) => {
+                    const titleA = a.querySelector('.section-title').textContent.trim();
+                    const titleB = b.querySelector('.section-title').textContent.trim();
+                    return order.indexOf(titleA) - order.indexOf(titleB);
+                });
+                
+                // Reappend elements in the correct order
+                elements.forEach(element => {
+                    container.appendChild(element);
+                });
+            } catch (e) {
+                console.error("Error restoring saved order:", e);
+            }
+        }
+        
+        // Initially collapse some sections for better initial view
+        const sectionsToCollapse = [
+            'Bacteriology Results', 'PACS', 'Forms-2 ObsToObs', 
+            'Forms', 'Observation Forms', 'Radiology'
+        ];
+        
+        document.querySelectorAll('.card-header').forEach(header => {
+            const sectionTitle = header.querySelector('.section-title').textContent.trim();
+            if (sectionsToCollapse.includes(sectionTitle)) {
+                // Simulate a click to collapse these sections
+                header.click();
+            }
+        });
+    });
+</script>
 {% endblock %}

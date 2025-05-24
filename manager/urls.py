@@ -34,7 +34,7 @@ from .views import (
     HRUserCreateView,
     EmergencyDepartmentCreateView, EmergencyDepartmentListView,
     SurgicalOperationsDepartmentCreateView, SurgicalOperationsDepartmentListView,
-    icd11_autocomplete
+    icd11_autocomplete, get_icd_details
 )
 from .views import VitalsCreateView
 app_name = "manager"
@@ -156,6 +156,7 @@ path(
 
     # ajax / autocomplete
     path("ajax/icd11-autocomplete/", icd11_autocomplete, name="icd11_autocomplete"),
+    path("ajax/icd11-details/", get_icd_details, name="icd11_details"),
 
     # HR
     path("hr-users/add/", HRUserCreateView.as_view(), name="hr_user_add"),

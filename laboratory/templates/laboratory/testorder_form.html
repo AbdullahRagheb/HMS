@@ -47,18 +47,47 @@
           <form method="post" novalidate>
             {% csrf_token %}
 
+            <!-- Request Type -->
+            <div class="mb-3">
+              <label class="form-label"><strong>Request Type</strong></label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="request_type" id="request_type_order" value="order" checked>
+                <label class="form-check-label" for="request_type_order">
+                  Test Order (Simple)
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="request_type" id="request_type_request" value="request">
+                <label class="form-check-label" for="request_type_request">
+                  Lab Request (with QR code tracking)
+                </label>
+              </div>
+              <div class="form-text">Choose the type of lab request you want to create.</div>
+            </div>
+
             <!-- Test Group -->
             <div class="mb-3">
               <label for="{{ form.group.id_for_label }}" class="form-label"><strong>Test Group</strong></label>
-              {{ form.group|add_class:"form-select form-select-sm" }}
+              <div class="d-flex align-items-center gap-2">
+                {{ form.group|add_class:"form-select form-select-sm" }}
+                <a href="{% url 'laboratory:test_group_list' %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                  <i class="bi bi-plus-circle"></i>
+                </a>
+              </div>
               {% if form.group.errors %}
                 <div class="text-danger small mt-1">{{ form.group.errors.as_text }}</div>
               {% endif %}
+              <div class="form-text">Select a test group to automatically select its tests, or select individual tests below.</div>
             </div>
 
             <!-- Tests with search box -->
             <div class="mb-3">
-              <label class="form-label"><strong>Tests</strong></label>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label mb-0"><strong>Tests</strong></label>
+                <a href="{% url 'laboratory:test_list' %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                  <i class="bi bi-list-ul me-1"></i> Manage Tests
+                </a>
+              </div>
               <input
                 type="text"
                 id="test-search"
@@ -66,17 +95,17 @@
                 placeholder="Search tests…"
               >
               <div class="border rounded p-2" style="max-height:250px; overflow-y:auto;">
-                {% for checkbox in form.tests %}
-                  <div class="form-check">
-                    {{ checkbox.tag|add_class:"form-check-input" }}
-                    <label class="form-check-label">{{ checkbox.choice_label }}</label>
+                {% for test in form.fields.tests.queryset %}
+                  <div class="form-check test-option" data-test-id="{{ test.id }}">
+                    <input type="checkbox" name="tests" value="{{ test.id }}" id="id_tests_{{ test.id }}" class="form-check-input">
+                    <label class="form-check-label" for="id_tests_{{ test.id }}">{{ test.english_name }}</label>
                   </div>
                 {% endfor %}
               </div>
               {% if form.tests.errors %}
                 <div class="text-danger small mt-1">{{ form.tests.errors.as_text }}</div>
               {% endif %}
-              <div class="form-text">Hold Ctrl/Cmd to select multiple.</div>
+              <div class="form-text">Hold Ctrl/Cmd to select multiple or use the search box to filter tests.</div>
             </div>
 
             <!-- Optional Notes -->
@@ -110,12 +139,69 @@
 </div>
 
 <script>
-// filter the test checkboxes as you type
+// Filter the test checkboxes as you type
 document.getElementById('test-search').addEventListener('input', function(e) {
   const term = e.target.value.toLowerCase();
-  document.querySelectorAll('.form-check').forEach(function(row) {
+  document.querySelectorAll('.test-option').forEach(function(row) {
     const label = row.querySelector('label').textContent.toLowerCase();
     row.style.display = label.includes(term) ? '' : 'none';
+  });
+});
+
+// Set up the group selector to auto-select tests
+document.addEventListener('DOMContentLoaded', function() {
+  const groupSelect = document.getElementById('{{ form.group.id_for_label }}');
+  
+  // We need to store the test mappings for each group
+  const groupTestMap = {};
+  
+  // Load the group test mappings via fetch
+  fetch('{% url "laboratory:test_group_list" %}?format=json')
+    .then(response => response.json())
+    .then(data => {
+      // Populate the mapping
+      data.forEach(group => {
+        groupTestMap[group.id] = group.tests;
+      });
+      
+      // If a group is preselected, select its tests
+      if (groupSelect.value) {
+        selectGroupTests(groupSelect.value);
+      }
+    })
+    .catch(error => {
+      console.error('Error loading test groups:', error);
+    });
+  
+  // Function to select all tests for a group
+  function selectGroupTests(groupId) {
+    if (!groupId || !groupTestMap[groupId]) return;
+    
+    // Unselect all tests first
+    document.querySelectorAll('input[name="tests"]').forEach(cb => {
+      cb.checked = false;
+    });
+    
+    // Select the tests for the chosen group
+    const testsToSelect = groupTestMap[groupId];
+    testsToSelect.forEach(testId => {
+      const checkbox = document.querySelector(`input[id="id_tests_${testId}"]`);
+      if (checkbox) {
+        checkbox.checked = true;
+      }
+    });
+  }
+  
+  // When a group is selected, select its tests
+  groupSelect.addEventListener('change', function() {
+    if (this.value) {
+      selectGroupTests(this.value);
+    } else {
+      // If "None" is selected, clear all test selections
+      document.querySelectorAll('input[name="tests"]').forEach(cb => {
+        cb.checked = false;
+      });
+    }
   });
 });
 </script>

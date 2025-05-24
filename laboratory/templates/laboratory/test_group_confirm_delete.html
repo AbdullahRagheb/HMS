@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Test Group{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'laboratory:test_group_list' %}">← Back to Test Groups</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Delete Test Group</li>
+    </ol>
+  </nav>
+
+  <div class="card">
+    <div class="card-header bg-danger text-white">
+      <h4 class="mb-0">Confirm Deletion</h4>
+    </div>
+    <div class="card-body">
+      <p class="lead">Are you sure you want to delete the test group <strong>{{ object.name }}</strong>?</p>
+      
+      <div class="alert alert-warning">
+        <p><i class="bi bi-exclamation-triangle me-2"></i> This action cannot be undone.</p>
+        <p class="mb-0">Deleting this group will not delete the individual tests, but any lab requests that reference this group will need to be updated.</p>
+      </div>
+      
+      {% if object.tests.all %}
+      <div class="mb-3">
+        <h5>This group contains {{ object.tests.count }} tests:</h5>
+        <ul class="list-group">
+          {% for test in object.tests.all %}
+            <li class="list-group-item">{{ test.english_name }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      
+      <form method="post">
+        {% csrf_token %}
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{% url 'laboratory:test_group_list' %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle me-1"></i> Cancel
+          </a>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash me-1"></i> Confirm Delete
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} 
