@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-4">
+  <h2>New Pharmacy Request for {{ patient.full_name }}</h2>
+
+  <form method="post" id="request-form">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      {{ form.create_pharmacy_request.label_tag }}
+      {{ form.create_pharmacy_request }}
+    </div>
+
+    <hr>
+
+    <h4>Medications &amp; Dosages</h4>
+    {{ items.management_form }}
+
+    <table class="table" id="items-table">
+      <thead>
+        <tr>
+          <th>Medication</th>
+          <th>Dosage</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in items %}
+        <tr>
+          <td>{{ f.medication }}</td>
+          <td>{{ f.dosage }}</td>
+          <td>
+            {% if items.can_delete %}
+              <div class="form-check">
+                {{ f.DELETE }}
+                <label class="form-check-label">Delete</label>
+              </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="button" id="add-row" class="btn btn-link">+ Add another medication</button>
+    <br><br>
+    <button type="submit" class="btn btn-primary">Create Request</button>
+  </form>
+</div>
+
+<script type="text/javascript">
+// parse the JSON safely and keep your editor happy
+const dosageMap = JSON.parse('{{ dosage_map_json|escapejs }}');
+
+function bindDosageAutoFill(selectEl) {
+  selectEl.addEventListener('change', e => {
+    const row = e.target.closest('tr');
+    const dosageInput = row.querySelector('input.dosage-input');
+    dosageInput.value = dosageMap[e.target.value] || '';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const tableBody     = document.querySelector('#items-table tbody');
+  const totalForms    = document.getElementById('id_items-TOTAL_FORMS');
+  const addRowBtn     = document.getElementById('add-row');
+
+  // wire up existing rows
+  tableBody.querySelectorAll('tr').forEach(row => {
+    const sel = row.querySelector('select');
+    if (sel) bindDosageAutoFill(sel);
+  });
+
+  addRowBtn.addEventListener('click', e => {
+    e.preventDefault();
+    let count = parseInt(totalForms.value, 10);
+    const newRow = tableBody.rows[0].cloneNode(true);
+
+    newRow.querySelectorAll('input, select').forEach(el => {
+      const name = el.name.replace(/-(\d+)-/, `-${count}-`);
+      el.name = name;
+      el.id   = 'id_' + name;
+      if (el.tagName === 'INPUT') {
+        if (el.type === 'text') el.value = '';
+        if (el.type === 'checkbox') el.checked = false;
+      }
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = 0;
+      }
+    });
+
+    tableBody.appendChild(newRow);
+    totalForms.value = count + 1;
+
+    // bind the new row's select
+    const sel = newRow.querySelector('select');
+    if (sel) bindDosageAutoFill(sel);
+  });
+});
+</script>
+{% endblock %} 

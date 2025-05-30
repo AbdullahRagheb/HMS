@@ -335,8 +335,7 @@ class ShiftAssignmentForm(forms.ModelForm):
         fields = ['schedule', 'staff', 'work_area', 'date', 'notes']
         widgets = {
             'schedule': forms.Select(attrs={'class': 'form-select', 'id': 'id_schedule'}),
-            # Use ModelMultipleChoiceField with CheckboxSelectMultiple for the staff field
-            'staff': forms.SelectMultiple(attrs={'class': 'form-select', 'id': 'id_staff'}),
+            'staff': forms.Select(attrs={'class': 'form-select', 'id': 'id_staff'}),
             'work_area': forms.Select(attrs={'class': 'form-select'}),
             'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'id': 'id_date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
@@ -352,7 +351,7 @@ class ShiftAssignmentForm(forms.ModelForm):
             )
             self.fields['work_area'].queryset = WorkArea.objects.filter(
                 department__hospital=hospital,
-                name__in=['طوارئ', 'عمليات', 'OPD', 'ICD']
+                name__in=['ipd', 'opd', 'er', 'ot', 'icu', 'ward']
             )
         self.fields['date'].widget.attrs['min'] = date.today().isoformat()
 
@@ -368,13 +367,31 @@ class ShiftAssignmentForm(forms.ModelForm):
         
         if schedule and staff and date:
             # Check if any of the selected staff are already assigned for this schedule and date
-            for person in staff:
-                if ShiftAssignment.objects.filter(
-                    schedule=schedule, staff=person, date=date
-                ).exclude(pk=self.instance.pk).exists():
-                    self.add_error(None, f"{person} is already assigned on this date for this schedule.")
+            if ShiftAssignment.objects.filter(
+                schedule=schedule, staff=staff, date=date
+            ).exclude(pk=self.instance.pk).exists():
+                self.add_error(None, f"{staff} is already assigned on this date for this schedule.")
 
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Automatically set the shift type based on schedule's shift period
+        if instance.schedule and instance.schedule.shift_period:
+            # For morning shifts (before noon)
+            if instance.schedule.shift_period == 'morning':
+                shift_type = ShiftType.objects.filter(start_time__hour__lt=12).first()
+            # For night shifts (after noon)
+            else:
+                shift_type = ShiftType.objects.filter(start_time__hour__gte=12).first()
+            
+            if shift_type:
+                instance.shift_type = shift_type
+        
+        if commit:
+            instance.save()
+        return instance
 
 class ShiftSwapRequestForm(forms.ModelForm):
     class Meta:

@@ -100,38 +100,23 @@
                                 <div class="col">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                                        {{ form.birth_year }}
+                                        <input type="hidden" id="birth_year" name="birth_year">
+                                        <input type="text" class="form-control" id="birth_year_display" placeholder="Year" disabled>
                                     </div>
-                                    {% if form.birth_year.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.birth_year.errors }}</div>
-                                    {% endif %}
                                 </div>
                                 <div class="col">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                                        {{ form.birth_month }}
+                                        <input type="hidden" id="birth_month" name="birth_month">
+                                        <input type="text" class="form-control" id="birth_month_display" placeholder="Month" disabled>
                                     </div>
-                                    {% if form.birth_month.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.birth_month.errors }}</div>
-                                    {% endif %}
                                 </div>
                                 <div class="col">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                                        {{ form.birth_day }}
+                                        <input type="hidden" id="birth_day" name="birth_day">
+                                        <input type="text" class="form-control" id="birth_day_display" placeholder="Day" disabled>
                                     </div>
-                                    {% if form.birth_day.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.birth_day.errors }}</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="bi bi-clock"></i></span>
-                                        {{ form.birth_hour }}
-                                    </div>
-                                    {% if form.birth_hour.errors %}
-                                        <div class="invalid-feedback d-block">{{ form.birth_hour.errors }}</div>
-                                    {% endif %}
                                 </div>
                             </div>
                             <!-- Display Calculated Values -->
@@ -425,88 +410,80 @@
             });
     }
 
-    // Toggle between Age and Date of Birth fields
-    $('input[name="birth_input_mode"]').on('change', function() {
-        const mode = $(this).val();
-        if (mode === 'age') {
-            $('#age_fields').show();
-            $('#dob_fields').hide();
-            $('#age_years, #age_months, #age_days').prop('required', true);
-            $('#birth_year, #birth_month, #birth_day, #birth_hour').prop('required', false);
-        } else {
-            $('#age_fields').hide();
-            $('#dob_fields').show();
-            $('#age_years, #age_months, #age_days').prop('required', false);
-            $('#birth_year, #birth_month, #birth_day').prop('required', true);
-            $('#birth_hour').prop('required', false); // birth_hour is optional
-        }
-        updateCalculatedValues();
-    });
+    $(document).ready(function() {
+        // Initially hide DOB fields
+        $('#dob_fields').hide();
 
-    // Calculate age from date of birth
-    function calculateAge(year, month, day) {
-        const dob = moment(`${year}-${month}-${day}`, 'YYYY-MM-DD');
-        if (!dob.isValid()) return null;
-        const now = moment();
-        const years = now.diff(dob, 'years');
-        dob.add(years, 'years');
-        const months = now.diff(dob, 'months');
-        dob.add(months, 'months');
-        const days = now.diff(dob, 'days');
-        return { years, months, days };
-    }
-
-    // Calculate date of birth from age
-    function calculateDOB(years, months, days) {
-        const now = moment();
-        const dob = now.subtract({ years, months, days });
-        return {
-            year: dob.year(),
-            month: dob.month() + 1, // Moment months are 0-based
-            day: dob.date()
-        };
-    }
-
-    // Update calculated values
-    function updateCalculatedValues() {
-        const mode = $('input[name="birth_input_mode"]:checked').val();
-        if (mode === 'age') {
+        function calculateDOBFromAge() {
             const years = parseInt($('#age_years').val()) || 0;
             const months = parseInt($('#age_months').val()) || 0;
             const days = parseInt($('#age_days').val()) || 0;
+
             if (years >= 0 && months >= 0 && days >= 0) {
-                const dob = calculateDOB(years, months, days);
-                $('#birth_year').val(dob.year);
-                $('#birth_month').val(dob.month);
-                $('#birth_day').val(dob.day);
-                $('#calculated_dob').text(`Calculated DOB: ${dob.year}-${dob.month}-${dob.day}`);
-                $('#calculated_age').text('');
-            } else {
-                $('#calculated_dob').text('');
-            }
-        } else {
-            const year = $('#birth_year').val();
-            const month = $('#birth_month').val();
-            const day = $('#birth_day').val();
-            if (year && month && day) {
-                const age = calculateAge(year, month, day);
-                if (age) {
-                    $('#age_years').val(age.years);
-                    $('#age_months').val(age.months);
-                    $('#age_days').val(age.days);
-                    $('#calculated_age').text(`Calculated Age: ${age.years} years, ${age.months} months, ${age.days} days`);
-                    $('#calculated_dob').text('');
-                } else {
-                    $('#calculated_age').text('');
-                }
-            } else {
-                $('#calculated_age').text('');
+                const today = moment();
+                const dob = moment(today).subtract(years, 'years')
+                                      .subtract(months, 'months')
+                                      .subtract(days, 'days');
+
+                // Update hidden inputs
+                $('#birth_year').val(dob.year());
+                $('#birth_month').val(dob.month() + 1);
+                $('#birth_day').val(dob.date());
+
+                // Update display inputs
+                $('#birth_year_display').val(dob.year());
+                $('#birth_month_display').val(dob.month() + 1);
+                $('#birth_day_display').val(dob.date());
+
+                $('#calculated_dob').text(`Calculated DOB: ${dob.format('YYYY-MM-DD')}`);
             }
         }
-    }
 
-    // Bind input events
-    $('#age_years, #age_months, #age_days, #birth_year, #birth_month, #birth_day').on('input change', updateCalculatedValues);
+        function calculateAgeFromDOB() {
+            const year = parseInt($('#birth_year').val());
+            const month = parseInt($('#birth_month').val());
+            const day = parseInt($('#birth_day').val());
+
+            if (year && month && day) {
+                const dob = moment(`${year}-${month}-${day}`, 'YYYY-M-D');
+                if (dob.isValid()) {
+                    const now = moment();
+                    const age = moment.duration(now.diff(dob));
+
+                    const years = Math.floor(age.asYears());
+                    const months = Math.floor(age.asMonths() % 12);
+                    const days = Math.floor(age.asDays() % 30);
+
+                    $('#age_years').val(years);
+                    $('#age_months').val(months);
+                    $('#age_days').val(days);
+                    $('#calculated_age').text(`Calculated Age: ${years} years, ${months} months, ${days} days`);
+                }
+            }
+        }
+
+        // Handle mode switching
+        $('input[name="birth_input_mode"]').on('change', function() {
+            const mode = $(this).val();
+            if (mode === 'age') {
+                $('#age_fields').show();
+                $('#dob_fields').hide();
+                calculateDOBFromAge();
+            } else {
+                $('#age_fields').hide();
+                $('#dob_fields').show();
+                calculateAgeFromDOB();
+            }
+        });
+
+        // Calculate on age input change
+        $('#age_years, #age_months, #age_days').on('input', calculateDOBFromAge);
+
+        // Trigger initial calculation if age fields have values
+        if ($('#age_years').val() || $('#age_months').val() || $('#age_days').val()) {
+            calculateDOBFromAge();
+        }
+    });
 
     // Update companion link dynamically
     document.getElementById('companion_phone').addEventListener('input', function() {

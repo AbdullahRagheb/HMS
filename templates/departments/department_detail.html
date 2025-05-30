@@ -8,6 +8,6 @@
     <p><strong>Hospital:</strong> {{ department.hospital.name }}</p>
     <p><strong>Description:</strong> {{ department.description }}</p>
     <p><strong>Active:</strong> {{ department.is_active }}</p>
-    <a href="{% url 'department_list' %}" class="btn btn-secondary">Back to List</a>
+    <a href="{% url 'manager:department_list' %}" class="btn btn-secondary">Back to List</a>
 </div>
 {% endblock %}

@@ -170,6 +170,10 @@
     .table-hover tbody tr:hover {
         background-color: #f8f9fa;
     }
+    tr[disabled] {
+        opacity: 0.5;
+        background-color: #f8f9fa;
+    }
     @media (max-width: 576px) {
         .btn {
             font-size: 0.9rem;
@@ -186,43 +190,102 @@
     document.addEventListener('DOMContentLoaded', function () {
         'use strict';
 
-        // Shift period handling
+        console.log('Script loaded');
+
+        // Get form elements
+        const scheduleTypeSelect = document.getElementById('id_schedule_type');
         const shiftPeriodSelect = document.getElementById('id_shift_period');
-        function updateDailyAvailability(shift) {
-            const times = {
-                'morning': { from: '08:00', to: '16:00' },
-                'night': { from: '16:00', to: '00:00' },
-                '': { from: '', to: '' }
-            };
-            const shiftTimes = times[shift] || times[''];
-            [0, 1, 2, 3, 4, 5, 6].forEach(day => {
-                const fromField = document.getElementById(`id_day_${day}_available_from`);
-                const toField = document.getElementById(`id_day_${day}_available_to`);
-                if (fromField && toField) {
-                    fromField.value = shiftTimes.from;
-                    toField.value = shiftTimes.to;
+
+        console.log('Schedule Type:', scheduleTypeSelect);
+        console.log('Shift Period:', shiftPeriodSelect);
+
+        // Function to set times for all days
+        function setTimesForAllDays(fromTime, toTime, disableWeekends = false) {
+            console.log('Setting times:', fromTime, toTime, 'Disable weekends:', disableWeekends);
+            
+            // Loop through all days (0-6 for Monday-Sunday)
+            for (let i = 0; i < 7; i++) {
+                const fromField = document.getElementById(`id_day_${i}_available_from`);
+                const toField = document.getElementById(`id_day_${i}_available_to`);
+                const row = fromField?.closest('tr');
+
+                console.log(`Day ${i}:`, fromField, toField);
+
+                if (fromField && toField && row) {
+                    if (disableWeekends && i > 4) {
+                        // Disable weekend days
+                        fromField.value = '';
+                        toField.value = '';
+                        fromField.disabled = true;
+                        toField.disabled = true;
+                        row.style.backgroundColor = '#f8f9fa';
+                    } else {
+                        // Set times for weekdays
+                        fromField.value = fromTime;
+                        toField.value = toTime;
+                        fromField.disabled = false;
+                        toField.disabled = false;
+                        row.style.backgroundColor = '';
+                    }
                 }
+            }
+        }
+
+        // Function to update times based on schedule type and shift period
+        function updateTimes() {
+            const scheduleType = scheduleTypeSelect.value;
+            const shiftPeriod = shiftPeriodSelect.value;
+
+            console.log('Updating times - Schedule Type:', scheduleType, 'Shift Period:', shiftPeriod);
+
+            let fromTime = '';
+            let toTime = '';
+            
+            // Set times based on shift period
+            if (shiftPeriod === 'morning') {
+                fromTime = '08:00';
+                toTime = '16:00';
+            } else if (shiftPeriod === 'night') {
+                fromTime = '16:00';
+                toTime = '00:00';
+            }
+
+            // Apply times and handle weekends for weekly schedule
+            setTimesForAllDays(fromTime, toTime, scheduleType === 'weekly');
+        }
+
+        // Add event listeners
+        if (scheduleTypeSelect) {
+            scheduleTypeSelect.addEventListener('change', function(e) {
+                console.log('Schedule type changed:', e.target.value);
+                updateTimes();
             });
         }
 
-        shiftPeriodSelect.addEventListener('change', function () {
-            updateDailyAvailability(this.value);
-        });
-
-        // Initialize daily availability if shift period is set
-        if (shiftPeriodSelect.value) {
-            updateDailyAvailability(shiftPeriodSelect.value);
+        if (shiftPeriodSelect) {
+            shiftPeriodSelect.addEventListener('change', function(e) {
+                console.log('Shift period changed:', e.target.value);
+                updateTimes();
+            });
         }
 
-        // Bootstrap form validation
+        // Initial update if values are pre-selected
+        if (scheduleTypeSelect?.value || shiftPeriodSelect?.value) {
+            console.log('Initial update');
+            updateTimes();
+        }
+
+        // Form validation
         const form = document.getElementById('schedule-form');
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            form.classList.add('was-validated');
-        });
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+        }
     });
 </script>
 {% endblock %}

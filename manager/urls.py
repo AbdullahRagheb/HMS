@@ -94,6 +94,7 @@ urlpatterns = [
     path("departments/<int:department_id>/patients/", department_patients, name="department_patients"),
     path("departments/<int:department_id>/beds/",     department_beds,     name="department_beds"),
     path("departments/<int:department_id>/rooms/",    department_rooms,    name="department_rooms"),
+    path("departments/<int:pk>/detail/", department_detail, name="department_detail"),
     path("departments/<int:pk>/edit/",  edit_department,   name="edit_department"),
     path("departments/<int:pk>/delete/",delete_department, name="delete_department"),
 
