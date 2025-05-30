@@ -42,7 +42,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 import qrcode
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image as PILImage, ImageDraw, ImageFont
 import io
 import os
 import arabic_reshaper
@@ -2625,11 +2625,10 @@ def pharmacy_request_pdf_download(request, pk):
         elements.append(Paragraph(status_text, style_normal))
         elements.append(Spacer(1, 20))
         
-        # Load and add QR code image
-        qr_image = ImageReader(pr.qr_code.path)
-        qr = Image(qr_image, width=150, height=150)
-        qr.hAlign = 'CENTER'
-        elements.append(qr)
+        # Load and add QR code image using ReportLabImage
+        img = ReportLabImage(pr.qr_code.path, width=150, height=150)
+        img.hAlign = 'CENTER'
+        elements.append(img)
     
     # Build the PDF document
     doc.build(elements)
